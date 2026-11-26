@@ -82,6 +82,21 @@ class StickerContentProviderTest {
   }
 
   @Test
+  fun `reports whether a pack is animated`() {
+    fun animatedFlag(): Int =
+      provider.query(Uri.withAppendedPath(base, "metadata"), null, null, null, null).use {
+        it.moveToFirst()
+        it.getInt(it.getColumnIndexOrThrow("animated_sticker_pack"))
+      }
+    assertEquals(0, animatedFlag())
+
+    val context = ApplicationProvider.getApplicationContext<Context>()
+    val metadata = File(context.filesDir, "${StickerPackStore.ROOT_DIR}/pack_test/metadata.json")
+    metadata.writeText(JSONObject(metadata.readText()).put("animated_sticker_pack", true).toString())
+    assertEquals(1, animatedFlag())
+  }
+
+  @Test
   fun `lists stickers and serves only listed files`() {
     provider.query(Uri.parse("$base/stickers/pack_test"), null, null, null, null).use {
       assertEquals(3, it.count)

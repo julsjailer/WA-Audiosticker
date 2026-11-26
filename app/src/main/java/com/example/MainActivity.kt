@@ -138,8 +138,8 @@ class MainActivity : ComponentActivity() {
       navigationBarStyle = SystemBarStyle.dark(android.graphics.Color.parseColor("#0B141A")),
     )
 
-    val htmlContent =
-      assets.open("audiostickers.html").bufferedReader(Charsets.UTF_8).use { it.readText() }
+    fun readAsset(path: String) = assets.open(path).bufferedReader(Charsets.UTF_8).use { it.readText() }
+    val htmlContent = LocalPage.compose(readAsset("audiostickers.html"), readAsset("waas/convert.js"))
 
     setContent {
       MyApplicationTheme(darkTheme = true, dynamicColor = false) {

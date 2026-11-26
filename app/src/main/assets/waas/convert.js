@@ -95,12 +95,22 @@
   const srcW = (s) => s.videoWidth || s.displayWidth || s.width;
   const srcH = (s) => s.videoHeight || s.displayHeight || s.height;
 
+  // Encuadre: "ajustar", "recortar" o { base, zoom, x, y }.
+  // zoom va de 1 a 4; x/y van de -1 a 1 y mueven la imagen (-1 izquierda/arriba, 1 derecha/abajo).
+  function frameRect(vw, vh, mode, side) {
+    const m = typeof mode === "string" ? { base: mode } : mode || {};
+    const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
+    const zoom = clamp(+m.zoom || 1, 1, 4);
+    const fit = m.base === "recortar" ? Math.max(side / vw, side / vh) : Math.min(side / vw, side / vh);
+    const w = vw * fit * zoom, h = vh * fit * zoom;
+    const place = (len, pos) => (side - len) / 2 + (clamp(+pos || 0, -1, 1) * Math.abs(side - len)) / 2;
+    return { x: place(w, m.x), y: place(h, m.y), w, h };
+  }
+
   function drawFrame(ctx, v, mode, side) {
-    const vw = srcW(v), vh = srcH(v);
+    const r = frameRect(srcW(v), srcH(v), mode, side);
     ctx.clearRect(0, 0, side, side);
-    const s = mode === "recortar" ? Math.max(side / vw, side / vh) : Math.min(side / vw, side / vh);
-    const w = vw * s, h = vh * s;
-    ctx.drawImage(v, (side - w) / 2, (side - h) / 2, w, h);
+    ctx.drawImage(v, r.x, r.y, r.w, r.h);
   }
 
   async function probeVideo(file) {
@@ -260,7 +270,7 @@
   }
 
   async function openDecoder(file) {
-    if (typeof ImageDecoder === "undefined") throw new Error("Este navegador no puede leer GIF animados (falta ImageDecoder). Usa Chrome o Edge actualizados.");
+    if (typeof ImageDecoder === "undefined") throw new Error("Este navegador no puede leer GIF animados (falta ImageDecoder). Actualiza «Android System WebView» desde Play Store.");
     const type = imageType(file);
     if (!(await ImageDecoder.isTypeSupported(type))) throw new Error("El navegador no puede leer imágenes " + type);
     const dec = new ImageDecoder({ data: await file.arrayBuffer(), type });
@@ -407,7 +417,7 @@
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
     const blob = await canvas.convertToBlob({ type: "image/webp", quality });
-    if (blob.type !== "image/webp") throw new Error("Este navegador no puede generar WebP (devolvió " + blob.type + "). Usa Chrome o Edge.");
+    if (blob.type !== "image/webp") throw new Error("Este navegador no puede generar WebP (devolvió " + blob.type + "). Actualiza «Android System WebView» desde Play Store.");
     const bytes = new Uint8Array(await blob.arrayBuffer());
     const parts = readChunks(bytes).filter((c) => c.fourcc === "ALPH" || c.fourcc === "VP8 " || c.fourcc === "VP8L");
     if (!parts.some((c) => c.fourcc === "VP8 " || c.fourcc === "VP8L")) throw new Error("WebP sin datos de imagen");
@@ -558,6 +568,72 @@
     return 0;
   }
 
+  // ---------------------------------------------------------------- sticker animado para paquetes
+  // Los paquetes que agrega otra app tienen reglas propias: 512×512, hasta 500 KB, hasta 10 s,
+  // 2 cuadros o más de al menos 8 ms cada uno. No pueden llevar sonido.
+  const PACK_MAX_BYTES = 500_000;
+  const PACK_MAX_SECONDS = 10;
+  const PACK_CAPTURE_FPS = 12;
+  // [fps, calidad], de mejor a peor.
+  const PACK_PRESETS = [[12, 0.75], [12, 0.55], [12, 0.4], [10, 0.4], [10, 0.28], [8, 0.28], [8, 0.18], [8, 0.1], [6, 0.08], [5, 0.03]];
+
+  // render(segundo) dibuja el instante pedido y devuelve un canvas (u otra imagen) cuadrado.
+  async function encodePackAnimation({ duration, render, onProgress, signal }) {
+    const prog = onProgress || (() => {});
+    const dur = Math.min(PACK_MAX_SECONDS, Math.max(0.4, duration || 0));
+    const n = Math.max(2, Math.round(dur * PACK_CAPTURE_FPS));
+    const captureFps = n / dur;
+    const frames = [];
+    const fpCanvas = new OffscreenCanvas(32, 32);
+    const fpCtx = fpCanvas.getContext("2d", { willReadFrequently: true });
+    try {
+      for (let i = 0; i < n; i++) {
+        checkAbort(signal);
+        const source = await render(i / captureFps);
+        fpCtx.clearRect(0, 0, 32, 32);
+        fpCtx.drawImage(source, 0, 0, 32, 32);
+        frames.push({ bmp: await createImageBitmap(source), fp: fpCtx.getImageData(0, 0, 32, 32).data });
+        prog("Leyendo cuadros", (0.6 * (i + 1)) / n);
+      }
+      const canvas = new OffscreenCanvas(SIDE, SIDE);
+      const ctx = canvas.getContext("2d");
+      for (let a = 0; a < PACK_PRESETS.length; a++) {
+        const [fps, q] = PACK_PRESETS[a];
+        const p = plan(frames.length, dur, fps, captureFps);
+        const at = (k) => frames[p[k].idx];
+        const unique = p.reduce((c, _, k) => c + (!k || !sameBytes(at(k).fp, at(k - 1).fp) ? 1 : 0), 0);
+        // Muestra de unos pocos cuadros para descartar sin codificar todo lo que no va a caber.
+        if (a < PACK_PRESETS.length - 1) {
+          const m = Math.min(8, p.length);
+          let sum = 0;
+          for (let j = 0; j < m; j++) sum += (await encodeStaticFrame(at(Math.floor((j * p.length) / m)).bmp, q, canvas, ctx)).payload.length;
+          if ((sum / m + 24) * unique > PACK_MAX_BYTES * 1.15) continue;
+        }
+        const out = [];
+        for (let k = 0; k < p.length; k++) {
+          checkAbort(signal);
+          const prev = out[out.length - 1];
+          if (prev && sameBytes(at(k).fp, at(k - 1).fp)) { prev.durationMs += p[k].durationMs; continue; }
+          const enc = await encodeStaticFrame(at(k).bmp, q, canvas, ctx);
+          out.push({ payload: enc.payload, hasAlpha: enc.hasAlpha, durationMs: p[k].durationMs });
+          prog("Creando la animación", 0.6 + (0.4 * (k + 1)) / p.length);
+        }
+        // Un sticker animado necesita 2 cuadros: si la imagen no cambia, se parte el único en dos.
+        if (out.length === 1) {
+          const half = Math.floor(out[0].durationMs / 2);
+          out.push({ ...out[0], durationMs: half });
+          out[0].durationMs -= half;
+        }
+        const bytes = buildAnimatedWebp(out, null, SIDE);
+        log("info", "paquete:intento", { fps, calidad: q, cuadros: out.length, bytes: bytes.length });
+        if (bytes.length <= PACK_MAX_BYTES) return { bytes, fps, quality: q, frames: out.length, durationMs: Math.round(dur * 1000) };
+      }
+      throw new Error("No cabe en 500 KB: usa un tramo más corto.");
+    } finally {
+      for (const f of frames) f.bmp.close();
+    }
+  }
+
   // ---------------------------------------------------------------- audio
   // El audio decodificado se guarda por archivo: la forma de onda y la creación no lo decodifican dos veces.
   const audioCache = new WeakMap();
@@ -622,7 +698,7 @@
   }
 
   async function encodeOpus(pcm, bitrate = 32000) {
-    if (typeof AudioEncoder === "undefined") throw new Error("Este navegador no tiene WebCodecs (AudioEncoder). Usa Chrome o Edge actualizados.");
+    if (typeof AudioEncoder === "undefined") throw new Error("Este navegador no tiene WebCodecs (AudioEncoder). Actualiza «Android System WebView» desde Play Store.");
     const base = { codec: "opus", sampleRate: SAMPLE_RATE, numberOfChannels: 1, bitrate };
     const candidates = [
       { ...base, bitrateMode: "variable", opus: { frameDuration: 20000, complexity: 10, application: "voip", signal: "voice" } },
@@ -981,6 +1057,8 @@
   WAAS.retagWebp = retagWebp;
   WAAS.create = create;
   WAAS.release = release;
+  WAAS.encodePackAnimation = encodePackAnimation;
+  WAAS.frameRect = frameRect;
   WAAS.limits = { SIDE, MAX_STICKER_BYTES, MAX_AUDIO_BYTES, SIDES, FPS_LIST };
-  WAAS._internals = { buildOggOpus, buildAnimatedWebp, buildStillWebp, fitTimeline, exifWhatsApp, readChunks, plan, sha256b64, score };
+  WAAS._internals = { loadVideo, seek, buildOggOpus, buildAnimatedWebp, buildStillWebp, fitTimeline, exifWhatsApp, readChunks, plan, sha256b64, score };
 })();

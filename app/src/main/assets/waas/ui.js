@@ -1,4 +1,5 @@
-// Interfaz: panel en Shadow DOM que se abre con el botón de la extensión.
+// Interfaz «Estudio» de AudioStickers: panel en Shadow DOM sobre WhatsApp Web.
+// Basado en ui.js de WA-audio-stickers (Shirtep, PolyForm Noncommercial 1.0.0); modificado para esta app.
 // Tres pestañas, cada una con su formulario: video con su sonido, imagen + audio, y video o GIF + otro audio.
 // Sin innerHTML (WhatsApp Web usa Trusted Types): todo el DOM se crea con createElement.
 (() => {
@@ -10,63 +11,74 @@
 
   const CSS = `
   :host { all: initial; }
-  * { box-sizing: border-box; font-family: system-ui, "Segoe UI", Roboto, sans-serif; }
-  .overlay { position: fixed; inset: 0; z-index: 2147483001; background: rgba(0,0,0,.5); display: flex; align-items: center; justify-content: center; }
-  .panel { --bg:#ffffff; --fg:#111b21; --muted:#667781; --card:#f0f2f5; --line:#d1d7db; --accent:#00a884; --accent-fg:#fff;
-           --ok:#25d366; --ok-bg:rgba(37,211,102,.18); --warn:#d29a00; --warn-bg:rgba(240,180,0,.2); --no:#8696a0; --err:#d13b3b;
-           width: min(680px, 96vw); max-height: 94vh; overflow: auto; background: var(--bg); color: var(--fg);
-           border-radius: 14px; padding: 18px 20px 14px; box-shadow: 0 12px 48px rgba(0,0,0,.45); font-size: 14px; }
-  .panel.dark { --bg:#111b21; --fg:#e9edef; --muted:#8696a0; --card:#202c33; --line:#2a3942; --ok-bg:rgba(37,211,102,.22); --warn-bg:rgba(240,180,0,.22); }
-  header { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
-  h2 { margin: 0; font-size: 19px; }
-  .muted { color: var(--muted); font-size: 12px; }
-  .hdr-r { display: flex; align-items: center; gap: 8px; flex: none; }
-  .kofi { display: inline-flex; align-items: center; gap: 4px; padding: 5px 13px; border-radius: 18px; background: #fff3cf; border: 1px solid #f2c14e;
-          color: #7a4b00; font-size: 12.5px; font-weight: 700; text-decoration: none; white-space: nowrap; transition: background .12s, border-color .12s; }
-  .panel.dark .kofi { background: rgba(255,196,60,.12); border-color: rgba(255,196,60,.45); color: #ffcf66; }
-  .kofi:hover { background: #ffe9a8; }
-  .panel.dark .kofi:hover { background: rgba(255,196,60,.22); }
+  * { box-sizing: border-box; font-family: system-ui, Roboto, "Segoe UI", sans-serif; -webkit-tap-highlight-color: transparent; }
+  .overlay { position: fixed; inset: 0; z-index: 2147483001; background: rgba(0,0,0,.6); display: flex; align-items: stretch; justify-content: center; }
+  .panel { --bg:#efeae2; --surface:#ffffff; --card:#ffffff; --input:#eceff2; --fg:#111b21; --muted:#54656f; --line:#d7dde2;
+           --accent:#008069; --accent-fg:#fff; --soft:rgba(0,128,105,.12); --ok:#1ea952; --ok-bg:rgba(37,211,102,.2);
+           --warn:#b26a00; --warn-bg:rgba(255,176,32,.2); --no:#8696a0; --err:#d93025;
+           width: min(560px, 100%); overflow: auto; overscroll-behavior: contain; background: var(--bg); color: var(--fg);
+           padding: 0 12px 24px; font-size: 15px; line-height: 1.4; }
+  .panel.dark { --bg:#0b141a; --surface:#111b21; --card:#182229; --input:#2a3942; --fg:#e9edef; --muted:#8696a0; --line:#2f3e46;
+                --accent:#00a884; --soft:rgba(0,168,132,.16); --ok:#25d366; --ok-bg:rgba(37,211,102,.24); --warn:#ffb020; --warn-bg:rgba(255,176,32,.22); --err:#ff5a5f; }
+  header { position: sticky; top: 0; z-index: 5; display: flex; align-items: center; gap: 12px; margin: 0 -12px; padding: 12px 14px;
+           background: var(--surface); border-bottom: 1px solid var(--line); }
+  .logo { flex: none; width: 40px; height: 40px; border-radius: 13px; display: flex; align-items: center; justify-content: center;
+          background: linear-gradient(135deg, #25d366, #00796b); color: #fff; font-size: 21px; }
+  h2 { margin: 0; font-size: 17px; }
+  .muted { color: var(--muted); font-size: 12.5px; }
+  .grow { flex: 1; min-width: 0; }
   .note { color: var(--warn); font-size: 12.5px; }
-  .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--line); margin: 6px 0 4px; }
-  .tabs button { border: none; background: none; color: var(--muted); padding: 8px 12px; font-size: 13.5px; font-weight: 600; border-bottom: 3px solid transparent; margin-bottom: -1px; }
-  .tabs button.on { color: var(--fg); border-bottom-color: var(--accent); }
-  .tabdesc { margin: 6px 2px 0; }
-  section { background: var(--card); border-radius: 10px; padding: 12px 14px; margin: 10px 0; }
+  .tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; margin: 12px 0 4px; padding: 4px; border-radius: 16px; background: var(--surface); }
+  .tabs button { border: none; background: none; color: var(--muted); min-height: 42px; padding: 6px 4px; border-radius: 12px; font-size: 13px; font-weight: 700; }
+  .tabs button.on { background: var(--accent); color: var(--accent-fg); }
+  .tabdesc { margin: 8px 4px 0; }
+  section { background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 14px; margin: 12px 0; }
   section.off { opacity: .45; pointer-events: none; }
-  h3 { margin: 0 0 8px; font-size: 14px; display: flex; align-items: center; gap: 8px; }
-  h3 .n { display: inline-flex; width: 22px; height: 22px; border-radius: 50%; background: var(--accent); color: var(--accent-fg); align-items: center; justify-content: center; font-size: 12px; }
-  .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin: 6px 0; }
-  .grow { flex: 1; }
-  button { font: inherit; cursor: pointer; }
+  h3 { margin: 0 0 10px; font-size: 15px; display: flex; align-items: center; gap: 9px; }
+  h3 .n { display: inline-flex; min-width: 26px; height: 26px; border-radius: 9px; background: var(--soft); color: var(--accent); align-items: center; justify-content: center; font-size: 13px; font-weight: 800; }
+  .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin: 8px 0; }
+  button { font: inherit; cursor: pointer; touch-action: manipulation; }
   button:disabled { opacity: .45; cursor: default; }
-  .act { padding: 8px 16px; border-radius: 18px; border: none; background: var(--accent); color: var(--accent-fg); font-weight: 600; }
-  .sec { padding: 5px 11px; border-radius: 14px; border: 1px solid var(--line); background: var(--bg); color: var(--fg); font-size: 12.5px; }
-  .icon { width: 28px; padding: 4px 0; text-align: center; }
-  .close { background: none; border: none; font-size: 22px; color: var(--muted); line-height: 1; }
-  input[type=text] { width: 200px; padding: 4px 8px; border-radius: 6px; border: 1px solid var(--line); background: var(--bg); color: var(--fg); font: inherit; }
-  .meta { display: grid; grid-template-columns: auto 1fr; gap: 6px 10px; align-items: center; margin: 4px 0 10px; }
-  input[type=number] { width: 78px; padding: 4px 6px; border-radius: 6px; border: 1px solid var(--line); background: var(--bg); color: var(--fg); font: inherit; }
-  select { padding: 4px 6px; border-radius: 6px; border: 1px solid var(--line); background: var(--bg); color: var(--fg); font: inherit; max-width: 100%; }
-  label.chk { display: flex; gap: 8px; align-items: flex-start; margin: 6px 0; }
-  video { display: block; width: 100%; max-height: 260px; background: #000; border-radius: 8px; }
-  .thumb { width: 150px; height: 150px; object-fit: contain; border-radius: 8px; background: repeating-conic-gradient(#bbb 0 25%, #eee 0 50%) 50% / 18px 18px; }
-  .track { position: relative; height: 34px; margin: 12px 8px 6px; background: var(--line); border-radius: 6px; cursor: pointer; touch-action: none; user-select: none; }
-  .track.audio { height: 48px; }
+  .act { min-height: 46px; padding: 10px 20px; border-radius: 14px; border: none; background: var(--accent); color: var(--accent-fg); font-weight: 700; }
+  .act.wide { width: 100%; }
+  .sec { min-height: 40px; padding: 7px 14px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); color: var(--fg); font-size: 13.5px; font-weight: 600; }
+  .icon { width: 44px; padding: 4px 0; text-align: center; font-size: 18px; }
+  .close { flex: none; width: 42px; height: 42px; border-radius: 12px; border: none; background: var(--input); font-size: 22px; color: var(--fg); line-height: 1; }
+  input[type=text], input[type=number], select { min-height: 42px; padding: 6px 10px; border-radius: 12px; border: 1px solid var(--line); background: var(--input); color: var(--fg); font: inherit; max-width: 100%; }
+  input[type=text] { width: 100%; }
+  input[type=number] { width: 88px; }
+  select { width: 100%; }
+  input[type=checkbox] { width: 20px; height: 20px; accent-color: var(--accent); }
+  input[type=range] { width: 100%; height: 40px; margin: 0; accent-color: var(--accent); }
+  input[type=range]:disabled { opacity: .35; }
+  audio { width: 100%; }
+  .meta { display: grid; grid-template-columns: auto 1fr; gap: 8px 10px; align-items: center; margin: 8px 0 10px; }
+  label.chk { display: flex; gap: 10px; align-items: flex-start; margin: 8px 0; }
+  video { display: block; width: 100%; max-height: 240px; background: #000; border-radius: 12px; }
+  .checker, .thumb, .stage { background: repeating-conic-gradient(#9aa4a9 0 25%, #cfd5d8 0 50%) 50% / 20px 20px; }
+  .thumb { display: block; width: 150px; height: 150px; object-fit: contain; border-radius: 12px; margin: 6px auto; }
+  .stage { display: block; width: min(100%, 320px); aspect-ratio: 1; margin: 0 auto 6px; border-radius: 16px; border: 2px solid var(--accent); touch-action: none; cursor: grab; }
+  .slider { display: grid; grid-template-columns: 92px 1fr 52px; gap: 8px; align-items: center; font-size: 13px; }
+  .slider output { text-align: right; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .track { position: relative; height: 44px; margin: 14px 14px 6px; background: var(--input); border-radius: 10px; cursor: pointer; touch-action: none; user-select: none; }
+  .track.audio { height: 56px; }
   .track canvas { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
-  .track .sel { position: absolute; top: 0; bottom: 0; background: rgba(0,168,132,.35); border-top: 2px solid var(--accent); border-bottom: 2px solid var(--accent); pointer-events: none; }
-  .track .handle { position: absolute; top: -5px; bottom: -5px; width: 14px; margin-left: -7px; background: var(--accent); border-radius: 4px; cursor: ew-resize; }
-  .track .handle::after { content: ""; position: absolute; left: 4px; top: 10px; bottom: 10px; width: 4px; border-left: 1px solid rgba(255,255,255,.8); border-right: 1px solid rgba(255,255,255,.8); }
-  .track .ph { position: absolute; top: -8px; bottom: -8px; width: 2px; margin-left: -1px; background: var(--fg); pointer-events: none; }
+  .track .sel { position: absolute; top: 0; bottom: 0; background: rgba(0,168,132,.35); border-top: 3px solid var(--accent); border-bottom: 3px solid var(--accent); pointer-events: none; }
+  .track .handle { position: absolute; top: -7px; bottom: -7px; width: 24px; margin-left: -12px; background: var(--accent); border-radius: 8px; cursor: ew-resize; }
+  .track .handle::after { content: ""; position: absolute; left: 9px; top: 15px; bottom: 15px; width: 4px; border-left: 1px solid rgba(255,255,255,.85); border-right: 1px solid rgba(255,255,255,.85); }
+  .track .ph { position: absolute; top: -10px; bottom: -10px; width: 2px; margin-left: -1px; background: var(--fg); pointer-events: none; }
   .times { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); margin: 0 8px; }
-  .trim { display: grid; grid-template-columns: auto auto 1fr; gap: 6px 10px; align-items: center; }
-  .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 16px; overflow: hidden; }
-  .seg button { border: none; padding: 5px 12px; background: var(--bg); color: var(--fg); font-size: 12.5px; }
+  .trim { display: grid; grid-template-columns: auto 1fr; gap: 8px 10px; align-items: center; }
+  .trim .row { margin: 0; }
+  .seg { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; border-radius: 14px; background: var(--input); margin: 8px 0; }
+  .seg button { border: none; min-height: 40px; padding: 5px 8px; border-radius: 11px; background: none; color: var(--fg); font-size: 13px; font-weight: 600; }
   .seg button.on { background: var(--accent); color: var(--accent-fg); }
-  .summary { background: var(--bg); border-radius: 8px; padding: 8px 10px; margin: 6px 0; font-size: 13px; }
+  .summary { background: var(--soft); border-radius: 12px; padding: 10px 12px; margin: 6px 0; font-size: 13px; }
+  .gridwrap { overflow-x: auto; }
   table.grid { border-collapse: separate; border-spacing: 3px; margin: 6px 0; font-size: 11.5px; }
   table.grid th { color: var(--muted); font-weight: 600; padding: 2px 4px; text-align: center; }
   table.grid th.side { text-align: right; }
-  table.grid td button { width: 52px; padding: 5px 0; border-radius: 6px; border: 1px solid transparent; font-size: 11.5px; background: transparent; color: var(--no); }
+  table.grid td button { width: 42px; padding: 8px 0; border-radius: 8px; border: 1px solid transparent; font-size: 11.5px; background: transparent; color: var(--no); }
   table.grid td button.ok { background: var(--ok-bg); color: var(--fg); }
   table.grid td button.baja { background: var(--warn-bg); color: var(--fg); }
   table.grid td button.no, table.grid td button.fuera { cursor: default; opacity: .6; }
@@ -74,15 +86,18 @@
   .legend { display: flex; gap: 12px; flex-wrap: wrap; font-size: 11.5px; color: var(--muted); }
   .legend i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; vertical-align: -2px; margin-right: 4px; }
   .stale { color: var(--warn); font-size: 12.5px; font-weight: 600; }
-  .bar { height: 6px; background: var(--line); border-radius: 3px; overflow: hidden; margin-top: 8px; }
+  .bar { height: 8px; background: var(--input); border-radius: 4px; overflow: hidden; margin-top: 8px; }
   .bar > div { height: 100%; width: 0; background: var(--accent); transition: width .2s; }
-  .status { font-size: 13px; margin: 6px 0 0; min-height: 18px; }
+  .status { font-size: 13.5px; margin: 8px 0 0; min-height: 18px; }
   .status.err { color: var(--err); font-weight: 600; }
-  .result { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; margin-top: 10px; }
-  details { margin-top: 8px; }
-  summary { cursor: pointer; color: var(--muted); font-size: 12.5px; }
-  .logbox { max-height: 150px; overflow: auto; font: 11px/1.35 ui-monospace, Consolas, monospace; background: var(--bg); padding: 6px 8px; border-radius: 6px; white-space: pre-wrap; margin-top: 6px; }
+  .result { display: flex; flex-direction: column; gap: 10px; align-items: center; margin-top: 10px; text-align: center; }
+  .result > div { width: 100%; }
+  .result .row { justify-content: center; }
+  details { margin-top: 10px; }
+  summary { cursor: pointer; color: var(--muted); font-size: 13px; min-height: 32px; display: list-item; padding: 6px 0; }
+  .logbox { max-height: 150px; overflow: auto; font: 11px/1.35 ui-monospace, monospace; background: var(--input); padding: 6px 8px; border-radius: 8px; white-space: pre-wrap; margin-top: 6px; }
   .logbox .e { color: var(--err); } .logbox .w { color: var(--warn); }
+  .credit { margin-top: 16px; text-align: center; font-size: 11.5px; color: var(--muted); }
   `;
 
   function h(tag, props, ...children) {
@@ -111,37 +126,6 @@
     }
   }
 
-  function download(blob, name) {
-    const a = h("a", { href: URL.createObjectURL(blob), download: name });
-    document.body.append(a);
-    a.click();
-    setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 2000);
-  }
-
-  async function saveLog() {
-    const stored = await WAAS.getStoredLog();
-    const entries = stored && stored.length ? stored : WAAS.entries;
-    const content = JSON.stringify({ exportado: new Date().toISOString(), version: WAAS.VERSION, ua: navigator.userAgent, entradas: entries }, null, 1);
-    const blob = new Blob([content], { type: "application/json" });
-    const name = "registro-stickers-con-sonido-" + new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19) + ".json";
-    if (window.showSaveFilePicker) {
-      try {
-        const handle = await window.showSaveFilePicker({ suggestedName: name, types: [{ description: "Registro JSON", accept: { "application/json": [".json"] } }] });
-        const w = await handle.createWritable();
-        await w.write(blob);
-        await w.close();
-        log("info", "registro:guardado", { nombre: handle.name, entradas: entries.length });
-        return;
-      } catch (e) {
-        if (e && e.name === "AbortError") return;
-        log("warn", "registro:selector-fallo", e);
-      }
-    }
-    download(blob, name);
-    log("info", "registro:descargado", { nombre: name, entradas: entries.length });
-  }
-  WAAS.saveLog = saveLog;
-
   const fmtT = (t) => (t >= 60 ? Math.floor(t / 60) + ":" + (t % 60).toFixed(2).padStart(5, "0") : t.toFixed(2) + " s");
   const fmtB = (b) => (b >= 1e6 ? (b / 1e6).toFixed(2) + " MB" : Math.round(b / 1000) + " KB");
   const isDark = () => {
@@ -154,7 +138,6 @@
     get(k, def) { try { const v = localStorage.getItem(k); return v == null ? def : JSON.parse(v); } catch (e) { return def; } },
     set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* sin almacenamiento */ } },
   };
-  const baseName = (f) => (f && f.name.replace(/\.[^.]+$/, "")) || "sticker";
 
   function mount() {
     if (document.getElementById("waas-root")) return;
@@ -184,7 +167,7 @@
       const hS = h("div", { class: "handle", title: "Inicio del tramo (arrastra)" });
       const hE = h("div", { class: "handle", title: "Fin del tramo (arrastra)" });
       const ph = h("div", { class: "ph" });
-      const track = h("div", { class: "track" + (isVideo ? "" : " audio"), title: "Haz clic o arrastra para moverte" }, wave, selBar, ph, hS, hE);
+      const track = h("div", { class: "track" + (isVideo ? "" : " audio"), title: "Toca o arrastra para moverte" }, wave, selBar, ph, hS, hE);
       const tLeft = h("span"), tRight = h("span");
       const playSegBtn = h("button", { class: "sec", textContent: "▶ Tramo" });
       const playCurBtn = h("button", { class: "sec", textContent: "▶ Desde el cursor" });
@@ -192,8 +175,8 @@
       const curLbl = h("span", { class: "muted grow", style: "text-align:right" });
       const startNum = h("input", { type: "number", min: 0, step: 0.01 });
       const endNum = h("input", { type: "number", min: 0, step: 0.01 });
-      const startCur = h("button", { class: "sec", textContent: "⤓ cursor", title: "Usar la posición del cursor como inicio" });
-      const endCur = h("button", { class: "sec", textContent: "⤓ cursor", title: "Usar la posición del cursor como fin" });
+      const startCur = h("button", { class: "sec", textContent: "Aquí", title: "Usar la posición del cursor como inicio" });
+      const endCur = h("button", { class: "sec", textContent: "Aquí", title: "Usar la posición del cursor como fin" });
       const lenLbl = h("span", { class: "muted" });
       const t = { start: 0, end: 0, playhead: 0, stopAt: null, dur: 0, offset: 0, url: null, peaks: null, peakMax: 1, muted: false };
       const listeners = new Set();
@@ -204,11 +187,10 @@
         h("div", { class: "row" }, playSegBtn, playCurBtn, playEndBtn, curLbl),
         h("div", { class: "trim" },
           h("span", null, "Inicio"),
-          h("span", { class: "row", style: "margin:0" }, mkStep("−", "Un cuadro antes", () => setStart(t.start - FRAME)), startNum, mkStep("+", "Un cuadro después", () => setStart(t.start + FRAME))),
-          h("span", { class: "row", style: "margin:0" }, startCur),
+          h("span", { class: "row" }, mkStep("−", "Un cuadro antes", () => setStart(t.start - FRAME)), startNum, mkStep("+", "Un cuadro después", () => setStart(t.start + FRAME)), startCur),
           h("span", null, "Fin"),
-          h("span", { class: "row", style: "margin:0" }, mkStep("−", "Un cuadro antes", () => setEnd(t.end - FRAME)), endNum, mkStep("+", "Un cuadro después", () => setEnd(t.end + FRAME))),
-          h("span", { class: "row", style: "margin:0" }, endCur, lenLbl)),
+          h("span", { class: "row" }, mkStep("−", "Un cuadro antes", () => setEnd(t.end - FRAME)), endNum, mkStep("+", "Un cuadro después", () => setEnd(t.end + FRAME)), endCur)),
+        lenLbl,
         hint ? h("div", { class: "muted", style: "margin-top:6px" }, hint) : null);
 
       const layout = () => {
@@ -414,13 +396,109 @@
       };
     }
 
+    // Encuadre con vista previa: zoom, posición horizontal y vertical, arrastre y pellizco.
+    function makeFramer({ getSource, watch, onChange }) {
+      const SIDE = WAAS.limits.SIDE;
+      const frame = { base: "ajustar", zoom: 1, x: 0, y: 0 };
+      const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
+      const stage = h("canvas", { class: "stage", width: SIDE, height: SIDE });
+      const ctx = stage.getContext("2d");
+      const segAjustar = h("button", { textContent: "Ver completo", onclick: () => set({ base: "ajustar", zoom: 1, x: 0, y: 0 }) });
+      const segRecortar = h("button", { textContent: "Llenar cuadro", onclick: () => set({ base: "recortar", zoom: 1, x: 0, y: 0 }) });
+      const slider = (label, min, max, apply) => {
+        const input = h("input", { type: "range", min, max, step: 1, "aria-label": label });
+        const out = h("output");
+        input.addEventListener("input", () => apply(+input.value));
+        return { input, out, el: h("label", { class: "slider" }, h("span", null, label), input, out) };
+      };
+      const zoom = slider("🔍 Zoom", 100, 400, (v) => set({ zoom: v / 100 }));
+      const posX = slider("↔ Horizontal", -100, 100, (v) => set({ x: v / 100 }));
+      const posY = slider("↕ Vertical", -100, 100, (v) => set({ y: v / 100 }));
+      const resetBtn = h("button", { class: "sec", textContent: "Centrar", onclick: () => set({ zoom: 1, x: 0, y: 0 }) });
+      function set(change) {
+        if (G.busy) return;
+        Object.assign(frame, change);
+        update();
+        onChange();
+      }
+      // Rectángulo que ocupa el origen dentro del sticker (null mientras no haya imagen).
+      const rect = () => {
+        const src = getSource();
+        const w = src && (src.videoWidth || src.naturalWidth), hh = src && (src.videoHeight || src.naturalHeight);
+        return w && hh ? { src, ...WAAS.frameRect(w, hh, frame, SIDE) } : null;
+      };
+      function update() {
+        const r = rect();
+        ctx.clearRect(0, 0, SIDE, SIDE);
+        if (r) {
+          try { ctx.drawImage(r.src, r.x, r.y, r.w, r.h); } catch (e) { /* cuadro aún no disponible */ }
+        }
+        segAjustar.classList.toggle("on", frame.base === "ajustar");
+        segRecortar.classList.toggle("on", frame.base === "recortar");
+        segAjustar.disabled = segRecortar.disabled = resetBtn.disabled = G.busy;
+        zoom.input.value = Math.round(frame.zoom * 100);
+        zoom.out.textContent = frame.zoom.toFixed(1).replace(".", ",") + "×";
+        zoom.input.disabled = G.busy;
+        for (const [ctl, key, len] of [[posX, "x", r && r.w], [posY, "y", r && r.h]]) {
+          ctl.input.value = Math.round(frame[key] * 100);
+          ctl.out.textContent = Math.round(frame[key] * 100) + "%";
+          ctl.input.disabled = G.busy || !r || Math.abs(SIDE - len) < 1; // sin margen no hay nada que mover
+        }
+      }
+
+      const pointers = new Map();
+      let pinch = null;
+      const spread = () => { const [a, b] = [...pointers.values()]; return Math.hypot(a.x - b.x, a.y - b.y) || 1; };
+      stage.addEventListener("pointerdown", (ev) => {
+        if (G.busy) return;
+        stage.setPointerCapture(ev.pointerId);
+        pointers.set(ev.pointerId, { x: ev.clientX, y: ev.clientY });
+        if (pointers.size === 2) pinch = { dist: spread(), zoom: frame.zoom };
+      });
+      stage.addEventListener("pointermove", (ev) => {
+        const prev = pointers.get(ev.pointerId);
+        if (!prev) return;
+        pointers.set(ev.pointerId, { x: ev.clientX, y: ev.clientY });
+        if (pointers.size >= 2) {
+          if (pinch) set({ zoom: clamp(pinch.zoom * (spread() / pinch.dist), 1, 4) });
+          return;
+        }
+        const r = rect();
+        if (!r) return;
+        const scale = SIDE / (stage.getBoundingClientRect().width || SIDE);
+        const move = (pos, delta, len) => {
+          const range = Math.abs(SIDE - len) / 2;
+          return range < 0.5 ? pos : clamp(pos + (delta * scale) / range, -1, 1);
+        };
+        set({ x: move(frame.x, ev.clientX - prev.x, r.w), y: move(frame.y, ev.clientY - prev.y, r.h) });
+      });
+      const release = (ev) => { pointers.delete(ev.pointerId); if (pointers.size < 2) pinch = null; };
+      stage.addEventListener("pointerup", release);
+      stage.addEventListener("pointercancel", release);
+
+      for (const el of watch) {
+        for (const name of ["load", "loadeddata", "seeked", "pause"]) el.addEventListener(name, update);
+        el.addEventListener("play", () => {
+          const tick = () => { update(); if (!el.paused) requestAnimationFrame(tick); };
+          requestAnimationFrame(tick);
+        });
+      }
+
+      return {
+        els: [stage, h("div", { class: "muted", style: "text-align:center" }, "Arrastra la imagen o pellizca para acercar."),
+          h("div", { class: "seg" }, segAjustar, segRecortar), zoom.el, posX.el, posY.el, h("div", { class: "row" }, resetBtn)],
+        update,
+        reset: () => { Object.assign(frame, { zoom: 1, x: 0, y: 0 }); update(); },
+        get value() { return { ...frame }; },
+      };
+    }
+
     // Formato: encuadre + (opcional) tabla de resolución × fps.
     // getParams() devuelve { visual, audio, fit } o null si faltan datos.
-    function makeFormat({ getParams, grid = true, sync = true, still = false, extras = [] }) {
-      const f = { mode: "ajustar", an: null, anKey: null, sel: null };
-      const segAjustar = h("button", { textContent: "Ajustar (bordes transparentes)", class: "on" });
-      const segRecortar = h("button", { textContent: "Recortar (llenar el cuadro)" });
-      const calcBtn = h("button", { class: "act", textContent: "Calcular opciones" });
+    function makeFormat({ getParams, getSource, watch, grid = true, sync = true, still = false, extras = [] }) {
+      const f = { an: null, anKey: null, sel: null };
+      const framer = makeFramer({ getSource, watch, onChange: () => api.onUpdate() });
+      const calcBtn = h("button", { class: "sec", textContent: "Calcular opciones" });
       const calcInfo = h("span", { class: "muted" });
       const staleLbl = h("div", { class: "stale", style: "display:none" }, "Algo cambió: vuelve a calcular las opciones.");
       // Barra propia del cálculo (la de "Crear y enviar" es solo para crear).
@@ -451,7 +529,7 @@
         if (!p) return null;
         const v = p.visual;
         const followsAudio = v.kind === "image" || p.fit !== "independiente";
-        return JSON.stringify([v.kind, fileId(v.file), v.start, v.dur, followsAudio ? p.fit : "", followsAudio ? +p.audio.dur.toFixed(3) : "", f.mode]);
+        return JSON.stringify([v.kind, fileId(v.file), v.start, v.dur, followsAudio ? p.fit : "", followsAudio ? +p.audio.dur.toFixed(3) : "", framer.value]);
       };
       // Clave del resultado: todo lo que cambia el sticker o su audio (el paquete y el autor se aplican al enviar).
       const fullKey = () => {
@@ -461,7 +539,8 @@
       };
       const fresh = () => !!f.an && f.anKey === key();
       const CALC_HINT = "Lee el tramo una vez y estima el peso de cada combinación.";
-      const reset = () => { if (f.an) WAAS.release(f.an); f.an = null; f.sel = null; gridHost.textContent = ""; selLbl.textContent = ""; calcInfo.textContent = CALC_HINT; };
+      const clearAnalysis = () => { if (f.an) WAAS.release(f.an); f.an = null; f.sel = null; gridHost.textContent = ""; selLbl.textContent = ""; calcInfo.textContent = CALC_HINT; };
+      const analyze = (p, signal, onProgress) => WAAS.analyze({ ...p, mode: framer.value, signal, onProgress });
       calcInfo.textContent = CALC_HINT;
 
       const renderGrid = () => {
@@ -490,19 +569,14 @@
         selLbl.textContent = c ? `Elegido: ${c.side} px · ${c.fps} fps · ≈ ${fmtB(c.est)}${c.estado === "baja" ? " (con menos calidad)" : ""}` : "Ninguna combinación cabe en 1 MB: acorta el tramo.";
       };
 
-      segAjustar.addEventListener("click", () => { f.mode = "ajustar"; api.onUpdate(); });
-      segRecortar.addEventListener("click", () => { f.mode = "recortar"; api.onUpdate(); });
       calcBtn.addEventListener("click", async () => {
         const p = getParams();
         if (!p) return;
-        reset();
+        clearAnalysis();
         const k = key();
         api.onUpdate();
         try {
-          const an = await run("analizar", (signal) => WAAS.analyze({
-            ...p, mode: f.mode, signal,
-            onProgress: (txt, frac) => { calcInfo.textContent = txt; api.setProgress(frac); },
-          }));
+          const an = await run("analizar", (signal) => analyze(p, signal, (txt, frac) => { calcInfo.textContent = txt; api.setProgress(frac); }));
           f.an = an; f.anKey = k;
           f.sel = an.auto ? { side: an.auto.side, fps: an.auto.fps } : null;
           calcInfo.textContent = `Listo en ${(an.ms / 1000).toFixed(1)} s. Elige una casilla (★ = recomendada).`;
@@ -514,8 +588,9 @@
         api.onUpdate();
       });
 
-      const body = [...extras, h("div", { class: "row" }, h("span", null, "Encuadre"), h("span", { class: "seg" }, segAjustar, segRecortar))];
-      if (grid) body.push(h("div", { class: "row" }, calcBtn, calcInfo), calcBar, staleLbl, gridHost, selLbl, legend);
+      const body = [...extras, ...framer.els];
+      if (grid) body.push(h("details", null, h("summary", null, "Calidad automática · toca para elegirla a mano"),
+        h("div", { class: "row" }, calcBtn, calcInfo), calcBar, staleLbl, h("div", { class: "gridwrap" }, gridHost), selLbl, legend));
       if (advanced) body.push(advanced);
 
       const api = {
@@ -529,20 +604,20 @@
           gridHost.style.opacity = stale ? ".35" : "";
           gridHost.style.pointerEvents = stale ? "none" : "";
           calcBtn.disabled = G.busy || !has;
-          segAjustar.disabled = segRecortar.disabled = G.busy;
-          segAjustar.classList.toggle("on", f.mode === "ajustar");
-          segRecortar.classList.toggle("on", f.mode === "recortar");
+          framer.update();
         },
-        // ¿Se puede crear ya? Con tabla hace falta haber calculado y elegido una casilla.
-        get ready() { return grid ? fresh() && !!f.sel : !!getParams(); },
-        reset,
+        get ready() { return !!getParams(); },
+        // Archivo nuevo: se descarta el análisis y se vuelve a centrar.
+        reset: () => { clearAnalysis(); framer.reset(); },
         fullKey,
         options: () => ({ syncMs: sync ? +syncNum.value || 0 : 0, still: still && stillChk.checked }),
-        // Devuelve el análisis y la combinación para crear. Sin tabla se analiza en el momento.
+        // Devuelve el análisis y la combinación para crear. Si no hay una elegida a mano
+        // (o quedó anticuada), se analiza en el momento y se usa la recomendada.
         async prepare(signal, onProgress) {
           const p = getParams();
-          if (grid) return { an: f.an, side: f.sel.side, fps: f.sel.fps, audio: p.audio, temp: false };
-          const an = await WAAS.analyze({ ...p, mode: f.mode, signal, onProgress });
+          if (grid && fresh() && f.sel) return { an: f.an, side: f.sel.side, fps: f.sel.fps, audio: p.audio, temp: false };
+          const an = await analyze(p, signal, onProgress);
+          if (!an.auto) { WAAS.release(an); throw new Error("No cabe en 1 MB con ningún ajuste: acorta el tramo."); }
           return { an, side: an.auto.side, fps: an.auto.fps, audio: p.audio, temp: true };
         },
       };
@@ -550,7 +625,7 @@
     }
 
     // Crear y enviar: datos del paquete, creación, vista previa y envío.
-    function makeCreate({ fmt, getBase }) {
+    function makeCreate({ fmt }) {
       const META_KEY = "waas-metadatos";
       const packInput = h("input", { type: "text", maxLength: 128, placeholder: "Ej.: Mis memes" });
       const authorInput = h("input", { type: "text", maxLength: 128, placeholder: "Ej.: tu nombre o apodo" });
@@ -559,25 +634,24 @@
       loadMeta();
       packInput.addEventListener("change", saveMeta);
       authorInput.addEventListener("change", saveMeta);
-      const createBtn = h("button", { class: "act", textContent: "Crear sticker" });
+      const createBtn = h("button", { class: "act wide", textContent: "Crear sticker" });
       const cancelBtn = h("button", { class: "sec", textContent: "Cancelar", style: "display:none" });
       const barIn = h("div");
       const status = h("div", { class: "status" });
       const resImg = h("img", { class: "thumb", alt: "vista previa del sticker" });
       const resAudio = h("audio", { controls: true });
-      const resInfo = h("div", { class: "muted", style: "max-width:380px" });
+      const resInfo = h("div", { class: "muted" });
       const togetherBtn = h("button", { class: "sec", textContent: "▶ Ver y oír juntos" });
       const destSel = h("select", null,
         h("option", { value: "abierto-solo", textContent: "Enviar al chat abierto" }),
         h("option", { value: "abierto", textContent: "Enviar al chat abierto y abrir Reenviar" }),
         h("option", { value: "propio", textContent: "Guardar en mi chat (Tú) y abrir Reenviar" }));
-      const sendBtn = h("button", { class: "act", textContent: "Enviar" });
-      const dlBtn = h("button", { class: "sec", textContent: "Descargar .webp y .ogg" });
+      const sendBtn = h("button", { class: "act wide", textContent: "Enviar" });
       const staleNote = h("div", { class: "stale", style: "display:none;margin-top:8px" },
         "Cambiaste algo después de crear este sticker. Pulsa «Crear sticker con los cambios»; si lo envías ahora, se envía la versión anterior.");
       const resultBox = h("div", { class: "result" }, resImg, h("div", null, resAudio, h("div", { class: "row" }, togetherBtn), resInfo));
       const result = h("div", { style: "display:none" }, staleNote, resultBox,
-        h("div", { class: "row", style: "margin-top:10px" }, destSel, sendBtn, dlBtn));
+        h("div", { class: "row", style: "margin-top:10px" }, destSel, sendBtn));
       const c = { result: null, key: null, urls: [] };
       const setStatus = (txt, frac, isErr) => {
         status.textContent = txt || "";
@@ -659,14 +733,6 @@
           setStatus("Error al enviar: " + e.message, 0, true);
         }
       });
-      dlBtn.addEventListener("click", () => {
-        if (!c.result) return;
-        const base = getBase();
-        download(c.result.webp, base + ".webp");
-        download(c.result.ogg, base + ".ogg");
-        log("info", "ui:descarga-archivos", { base });
-      });
-
       const api = {
         body: [
           h("div", null,
@@ -694,11 +760,11 @@
     }
 
     // Arma un formulario completo a partir de sus secciones de origen.
-    function makeForm({ id, title, desc, sources, fmt, getBase, onShow, stop }) {
-      const create = makeCreate({ fmt, getBase });
+    function makeForm({ id, title, desc, sources, fmt, onShow, stop }) {
+      const create = makeCreate({ fmt });
       let n = 0;
       const secs = sources.map((s) => section(++n, s.title, ...s.body));
-      const secFmt = section(++n, "Formato", ...fmt.body);
+      const secFmt = section(++n, "Encuadre", ...fmt.body);
       const secCreate = section(++n, "Crear y enviar", ...create.body);
       const el = h("div", { style: "display:none" }, h("div", { class: "muted tabdesc" }, desc), ...secs, secFmt, secCreate);
       const form = {
@@ -722,10 +788,11 @@
     // ============================================================ pestaña 1: video con su sonido
     function videoForm() {
       const picker = makePicker("Elegir video…", "video/*,.mov,.mp4,.webm,.mkv", "Cualquier video con sonido.");
-      const trimmer = makeTrimmer("video", "Arrastra las asas verdes: el video muestra el cuadro donde quedan. Haz clic o arrastra en la barra para mover el cursor.");
+      const trimmer = makeTrimmer("video", "Arrastra las asas verdes: el video muestra el cuadro donde quedan. Toca o arrastra en la barra para mover el cursor.");
       const s = { file: null };
       const changed = () => form.refresh();
       const fmt = makeFormat({
+        getSource: () => (s.file ? trimmer.media : null), watch: [trimmer.media],
         getParams: () => (s.file && trimmer.loaded ? {
           visual: { kind: "video", file: s.file, start: trimmer.start, dur: trimmer.len },
           audio: { file: s.file, start: trimmer.start, dur: trimmer.len }, fit: "repetir",
@@ -760,7 +827,7 @@
           { title: "Video", body: [picker.el], ready: () => !!s.file },
           { title: "Tramo", body: [trimmer.el], ready: () => trimmer.loaded, enabled: () => trimmer.loaded },
         ],
-        fmt, getBase: () => baseName(s.file), stop: () => trimmer.stop(),
+        fmt, stop: () => trimmer.stop(),
       });
       return form;
     }
@@ -769,15 +836,17 @@
     function imageForm() {
       const picker = makePicker("Elegir imagen…", "image/*", "JPG, PNG, WebP… (una foto, un dibujo, un meme).");
       const thumb = h("img", { class: "thumb", alt: "imagen elegida", style: "display:none" });
-      const animNote = h("div", { class: "note", style: "display:none" }, "Es una imagen animada: aquí solo se usa su primer cuadro. Para que se mueva, usa la pestaña «Video o GIF + audio».");
+      const animNote = h("div", { class: "note", style: "display:none" }, "Es una imagen animada: aquí solo se usa su primer cuadro. Para que se mueva, usa la pestaña «GIF + audio».");
       const s = { file: null, url: null };
       const changed = () => form.refresh();
       const audio = makeAudioSource(changed);
       const fmt = makeFormat({
         grid: false, sync: false, still: true,
+        getSource: () => (s.file ? thumb : null), watch: [thumb],
         getParams: () => (s.file && audio.ready ? { visual: { kind: "image", file: s.file }, audio: audio.params, fit: "repetir" } : null),
       });
       picker.onPick(async (f) => {
+        fmt.reset();
         form.create.clear();
         picker.info.textContent = "Leyendo " + f.name + "…";
         await run("imagen", async () => {
@@ -786,26 +855,26 @@
             s.file = f;
             if (s.url) URL.revokeObjectURL(s.url);
             s.url = URL.createObjectURL(f);
-            thumb.src = s.url; thumb.style.display = "";
+            thumb.src = s.url; // solo alimenta la vista previa del encuadre
             animNote.style.display = meta.animated ? "" : "none";
             picker.info.textContent = `${f.name} · ${meta.width}×${meta.height}`;
             log("info", "ui:imagen-elegida", { nombre: f.name, tipo: f.type, bytes: f.size, ...meta });
           } catch (e) {
             log("error", "ui:imagen-error", e);
             picker.info.textContent = "No se pudo leer: " + e.message;
-            s.file = null; thumb.style.display = "none"; animNote.style.display = "none";
+            s.file = null; thumb.removeAttribute("src"); animNote.style.display = "none";
           }
         });
         changed();
       });
       const form = makeForm({
-        id: "imagen", title: "Imagen + audio",
+        id: "imagen", title: "Foto + audio",
         desc: "Una imagen fija con el sonido que elijas. El sticker dura lo que dure el tramo de audio.",
         sources: [
-          { title: "Imagen", body: [picker.el, thumb, animNote], ready: () => !!s.file },
+          { title: "Imagen", body: [picker.el, animNote], ready: () => !!s.file },
           { title: "Audio", body: audio.els, ready: () => audio.ready },
         ],
-        fmt, getBase: () => baseName(s.file), stop: () => audio.trimmer.stop(),
+        fmt, stop: () => audio.trimmer.stop(),
       });
       return form;
     }
@@ -859,7 +928,8 @@
       });
 
       const fmt = makeFormat({
-        extras: [summary, fitRow, h("div", { class: "row" }, testBtn, h("span", { class: "muted" }, "Vista previa: la animación se reproduce una vez, como en WhatsApp."))],
+        extras: [summary, fitRow, h("div", { class: "row" }, testBtn, h("span", { class: "muted" }, "La animación se reproduce una vez, como en WhatsApp."))],
+        getSource: () => (s.kind === "gif" ? gifImg : s.kind === "video" ? vTrim.media : null), watch: [gifImg, vTrim.media],
         getParams: () => {
           if (!s.file || !audio.ready) return null;
           const visual = s.kind === "gif" ? { kind: "gif", file: s.file, start: 0, dur: s.gif.duration } : { kind: "video", file: s.file, start: vTrim.start, dur: vTrim.len };
@@ -877,7 +947,7 @@
             if (s.url) { URL.revokeObjectURL(s.url); s.url = null; }
             if (WAAS.isAnimationFile(f) || (f.type || "").startsWith("image/")) {
               const g = await WAAS.probeAnimation(f);
-              if (!g.animated) throw new Error("es una imagen fija. Usa la pestaña «Imagen + audio».");
+              if (!g.animated) throw new Error("es una imagen fija. Usa la pestaña «Foto + audio».");
               s.file = f; s.kind = "gif"; s.gif = g;
               s.url = URL.createObjectURL(f);
               gifImg.src = s.url; gifImg.style.display = ""; vWrap.style.display = "none";
@@ -888,7 +958,7 @@
               const meta = await WAAS.probeVideo(f);
               s.file = f; s.kind = "video"; s.gif = null;
               vTrim.load(f, meta);
-              vWrap.style.display = ""; gifImg.style.display = "none";
+              vWrap.style.display = ""; gifImg.removeAttribute("src"); gifImg.style.display = "none";
               picker.info.textContent = `${f.name} · ${fmtT(meta.duration)} · ${meta.width}×${meta.height}`;
               log("info", "ui:video-elegido", { nombre: f.name, tipo: f.type, bytes: f.size, sinSuAudio: true, ...meta });
             }
@@ -896,7 +966,7 @@
             log("error", "ui:animacion-error", e);
             picker.info.textContent = "No se pudo usar: " + e.message;
             s.file = null; s.kind = null; s.gif = null;
-            vTrim.clear(); vWrap.style.display = "none"; gifImg.style.display = "none";
+            vTrim.clear(); vWrap.style.display = "none"; gifImg.removeAttribute("src"); gifImg.style.display = "none";
           }
         });
         changed();
@@ -905,13 +975,13 @@
       updateSummary();
 
       const form = makeForm({
-        id: "mezcla", title: "Video o GIF + audio",
+        id: "mezcla", title: "GIF + audio",
         desc: "Una animación (video sin su sonido, o un GIF) con el audio que elijas.",
         sources: [
           { title: "Animación", body: [picker.el, vWrap, gifImg], ready: () => !!s.file },
           { title: "Audio", body: audio.els, ready: () => audio.ready },
         ],
-        fmt, getBase: () => baseName(s.file),
+        fmt,
         stop: () => { vTrim.stop(); audio.trimmer.stop(); },
       });
       return form;
@@ -934,21 +1004,20 @@
     G.refreshTabs = () => tabBtns.forEach((b, i) => { b.classList.toggle("on", i === active); b.disabled = G.busy && i !== active; });
 
     const logBox = h("div", { class: "logbox" });
-    const tools = h("details", null, h("summary", null, "Herramientas de prueba (registro, diagnóstico)"),
+    const tools = h("details", null, h("summary", null, "Registro técnico (si algo falla)"),
       h("div", { class: "row" },
-        h("button", { class: "sec", textContent: "Diagnóstico", onclick: () => WAAS.wa.diagnose().catch((e) => log("error", "diagnostico:error", e)) }),
-        h("button", { class: "sec", textContent: "Guardar registro…", onclick: () => saveLog().catch((e) => log("error", "registro:error", e)) }),
-        h("button", { class: "sec", textContent: "Ver registro completo", onclick: () => window.postMessage({ __waas: "openLog" }, location.origin) })),
+        h("button", { class: "sec", textContent: "Diagnóstico", onclick: () => WAAS.wa.diagnose().catch((e) => log("error", "diagnostico:error", e)) })),
       logBox);
 
     const closeBtn = h("button", { class: "close", title: "Cerrar", textContent: "×" });
     const panel = h("div", { class: "panel" },
-      h("header", null, h("div", null, h("h2", null, "Stickers con sonido"), h("div", { class: "muted" }, "Versión " + WAAS.VERSION + " · todo se procesa en tu navegador · máximo 1 MB por sticker")),
-        h("div", { class: "hdr-r" },
-          h("a", { class: "kofi", href: "https://ko-fi.com/shirtep", target: "_blank", rel: "noopener", title: "La extensión es gratis. Si te sirve, puedes apoyar el proyecto en Ko-fi.", textContent: "☕ Apoyar" }),
-          closeBtn)),
+      h("header", null, h("div", { class: "logo" }, "♪"),
+        h("div", { class: "grow" }, h("h2", null, "AudioStickers · Estudio"), h("div", { class: "muted" }, "Stickers con sonido, hechos en tu teléfono")),
+        closeBtn),
       h("nav", { class: "tabs" }, tabBtns),
-      G.forms.map((f) => f.el), tools);
+      G.forms.map((f) => f.el), tools,
+      // Crédito exigido por la licencia del código en el que se basa esta pantalla.
+      h("div", { class: "credit" }, "Basado en WA-audio-stickers de Shirtep (github.com/Shirtep/WA-audio-stickers) · Licencia PolyForm Noncommercial 1.0.0"));
     const overlay = h("div", { class: "overlay", style: "display:none" }, panel);
     root.append(overlay);
 

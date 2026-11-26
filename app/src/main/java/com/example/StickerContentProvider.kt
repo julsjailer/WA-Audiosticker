@@ -125,7 +125,7 @@ class StickerContentProvider : ContentProvider() {
           "",
           pack.optString("image_data_version", "1"),
           1,
-          0,
+          if (pack.optBoolean(StickerPackStore.ANIMATED_KEY)) 1 else 0,
         )
       )
     }
