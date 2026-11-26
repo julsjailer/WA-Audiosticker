@@ -49,8 +49,12 @@ If those secrets are not configured, CI uses the standard temporary runner debug
 
 The application ID is `io.github.julsjailer.audiostickers`. It installs next to older `com.example` builds; their saved gallery is not migrated.
 
+## Experimento: stickers con sonido en WhatsApp Web
+
+La app puede abrir WhatsApp Web con el código de [WA-audio-stickers](https://github.com/Shirtep/WA-audio-stickers) (`app/src/main/assets/waas`, **solo uso no comercial**). Es no oficial: WhatsApp puede restringir la cuenta y puede dejar de funcionar sin aviso.
+
 ## Cómo funcionan los stickers
 
 - **Paquetes para WhatsApp:** stickers estáticos 512×512 (máximo 100 KB, de 3 a 30 por paquete, hasta 10 paquetes). **No llevan sonido**: el formato de paquetes no lo admite. Reexportar con el mismo nombre actualiza el paquete.
-- **Stickers con sonido:** la app genera un video con audio. El sticker lo crea WhatsApp (Stickers → Crear sticker), solo en cuentas que ya tengan la función. WhatsApp une el sticker y el audio al enviar; esta app no puede hacerlo.
+- **Stickers con sonido:** la app genera un video con audio. El sticker lo crea WhatsApp (Stickers → Crear sticker), solo en cuentas que ya tengan la función. WhatsApp une el sticker y el audio al enviar; los paquetes y el compartir de Android no pueden hacerlo (ver el experimento).
 - **Galería de la app:** de un video solo guarda un cuadro fijo y el audio.

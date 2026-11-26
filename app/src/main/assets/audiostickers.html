@@ -1180,6 +1180,8 @@
           </div>
           <button id="shareAudioDirectBtn" class="btn btn-secondary btn-sm" type="button">🔊 Enviar archivo de audio (.wav) directo a WhatsApp</button>
 
+          <button id="openSoundStickerWebBtn" class="btn btn-secondary btn-sm" type="button" hidden>🧪 Stickers con sonido en WhatsApp Web (experimental)</button>
+
           <div class="beta-steps-box">
             <strong>Crear el sticker con sonido (solo si tu WhatsApp ya tiene la función):</strong><br/>
             1. Toca <strong>Guardar en Galería</strong>.<br/>
@@ -2590,6 +2592,11 @@
       }
 
       saveStickerVideoBtn.addEventListener('click', () => exportUnifiedSticker(false));
+      const openSoundStickerWebBtn = document.getElementById('openSoundStickerWebBtn');
+      if (window.AndroidBridge && typeof window.AndroidBridge.openSoundStickerWeb === 'function') {
+        openSoundStickerWebBtn.hidden = false;
+        openSoundStickerWebBtn.addEventListener('click', () => window.AndroidBridge.openSoundStickerWeb());
+      }
       shareStickerVideoBtn.addEventListener('click', () => exportUnifiedSticker(true));
       shareAudioDirectBtn.addEventListener('click', async () => {
         if (!state.audioBuffer) {

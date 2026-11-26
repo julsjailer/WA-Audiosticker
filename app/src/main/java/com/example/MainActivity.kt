@@ -53,6 +53,7 @@ import androidx.lifecycle.lifecycleScope
 import com.example.stickers.StickerPackStore
 import com.example.ui.SoundStickerViewModel
 import com.example.ui.theme.MyApplicationTheme
+import com.example.whatsappweb.WhatsAppWebActivity
 import java.io.File
 import java.io.FileOutputStream
 import kotlinx.coroutines.Dispatchers
@@ -247,7 +248,7 @@ class MainActivity : ComponentActivity() {
                 override fun shouldOverrideUrlLoading(
                   view: WebView?,
                   request: WebResourceRequest?,
-                ): Boolean = false
+                ): Boolean = true // La página local nunca navega: así el puente no queda expuesto.
 
                 override fun onPageFinished(view: WebView?, url: String?) {
                   super.onPageFinished(view, url)
@@ -313,6 +314,13 @@ class MainActivity : ComponentActivity() {
   }
 
   private inner class AudioStickersBridge {
+    @JavascriptInterface
+    fun openSoundStickerWeb() {
+      runOnUiThread {
+        startActivity(Intent(this@MainActivity, WhatsAppWebActivity::class.java))
+      }
+    }
+
     private fun installedWhatsAppPackages(): List<String> =
       listOf("com.whatsapp", "com.whatsapp.w4b").filter { pkg ->
         try {
