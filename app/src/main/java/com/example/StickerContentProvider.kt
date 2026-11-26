@@ -8,6 +8,7 @@ import android.database.Cursor
 import android.database.MatrixCursor
 import android.net.Uri
 import android.os.ParcelFileDescriptor
+import com.example.stickers.StickerPackStore
 import java.io.File
 import java.io.FileNotFoundException
 import org.json.JSONArray
@@ -22,16 +23,17 @@ class StickerContentProvider : ContentProvider() {
     const val STICKER_PACK_ICON_IN_QUERY = "sticker_pack_icon"
     const val ANDROID_APP_DOWNLOAD_LINK_IN_QUERY = "android_play_store_link"
     const val IOS_APP_DOWNLOAD_LINK_IN_QUERY = "ios_app_download_link"
-    const val PUBLISHER_EMAIL = "publisher_email"
-    const val PUBLISHER_WEBSITE = "publisher_website"
-    const val PRIVACY_POLICY_WEBSITE = "privacy_policy_website"
-    const val LICENSE_AGREEMENT_WEBSITE = "license_agreement_website"
+    const val PUBLISHER_EMAIL = "sticker_pack_publisher_email"
+    const val PUBLISHER_WEBSITE = "sticker_pack_publisher_website"
+    const val PRIVACY_POLICY_WEBSITE = "sticker_pack_privacy_policy_website"
+    const val LICENSE_AGREEMENT_WEBSITE = "sticker_pack_license_agreement_website"
     const val IMAGE_DATA_VERSION = "image_data_version"
-    const val AVOID_CACHE = "avoid_cache"
+    const val AVOID_CACHE = "whatsapp_will_not_cache_stickers"
     const val ANIMATED_STICKER_PACK = "animated_sticker_pack"
 
     const val STICKER_FILE_NAME_IN_QUERY = "sticker_file_name"
     const val STICKER_FILE_EMOJI_IN_QUERY = "sticker_emoji"
+    const val STICKER_FILE_ACCESSIBILITY_TEXT_IN_QUERY = "sticker_accessibility_text"
 
     private const val METADATA_CODE = 1
     private const val METADATA_CODE_FOR_SINGLE_PACK = 2
@@ -54,22 +56,11 @@ class StickerContentProvider : ContentProvider() {
     return true
   }
 
-  private fun packsRootDir(): File? =
-    context?.let { File(it.filesDir, "sticker_packs").apply { mkdirs() } }
+  private fun loadAllPackJsons(): List<JSONObject> =
+    context?.let { StickerPackStore.loadPacks(it.filesDir) }.orEmpty()
 
-  private fun loadAllPackJsons(): List<JSONObject> {
-    val root = packsRootDir() ?: return emptyList()
-    val dirs = root.listFiles { file -> file.isDirectory } ?: return emptyList()
-    return dirs.mapNotNull { dir ->
-      val metaFile = File(dir, "metadata.json")
-      if (!metaFile.exists()) return@mapNotNull null
-      try {
-        JSONObject(metaFile.readText(Charsets.UTF_8))
-      } catch (_: Exception) {
-        null
-      }
-    }
-  }
+  private fun findPack(identifier: String): JSONObject? =
+    loadAllPackJsons().firstOrNull { it.optString("identifier") == identifier }
 
   override fun query(
     uri: Uri,
@@ -94,7 +85,7 @@ class StickerContentProvider : ContentProvider() {
       }
       STICKERS_CODE -> {
         val identifier = uri.lastPathSegment.orEmpty()
-        val pack = loadAllPackJsons().firstOrNull { it.optString("identifier") == identifier }
+        val pack = findPack(identifier)
         buildStickersCursor(pack).apply { setNotificationUri(ctx.contentResolver, uri) }
       }
       else -> throw IllegalArgumentException("Unknown URI: $uri")
@@ -142,12 +133,23 @@ class StickerContentProvider : ContentProvider() {
   }
 
   private fun buildStickersCursor(pack: JSONObject?): Cursor {
-    val cursor = MatrixCursor(arrayOf(STICKER_FILE_NAME_IN_QUERY, STICKER_FILE_EMOJI_IN_QUERY))
+    val cursor =
+      MatrixCursor(
+        arrayOf(
+          STICKER_FILE_NAME_IN_QUERY,
+          STICKER_FILE_EMOJI_IN_QUERY,
+          STICKER_FILE_ACCESSIBILITY_TEXT_IN_QUERY,
+        )
+      )
     val stickers: JSONArray = pack?.optJSONArray("stickers") ?: return cursor
     for (i in 0 until stickers.length()) {
       val s = stickers.optJSONObject(i) ?: continue
       cursor.addRow(
-        arrayOf<Any>(s.optString("image_file"), s.optString("emojis", "🔊"))
+        arrayOf<Any>(
+          s.optString("image_file"),
+          s.optString("emojis", "🔊"),
+          "Sticker ${i + 1}",
+        )
       )
     }
     return cursor
@@ -159,25 +161,34 @@ class StickerContentProvider : ContentProvider() {
     }
     val segments = uri.pathSegments
     if (segments.size != 3) throw FileNotFoundException("Invalid segments: $uri")
-    val identifier = segments[1].replace(Regex("[^a-zA-Z0-9_-]"), "")
-    val fileName = segments[2].replace(Regex("[^a-zA-Z0-9._-]"), "")
-    val root = packsRootDir() ?: throw FileNotFoundException("Storage unavailable")
+    val identifier = segments[1]
+    val fileName = segments[2]
+    // Solo se sirven los archivos que figuran en un paquete válido.
+    val pack = findPack(identifier) ?: throw FileNotFoundException("Unknown pack: $identifier")
+    val stickers = pack.getJSONArray("stickers")
+    val listed =
+      fileName == pack.optString("tray_image_file") ||
+        (0 until stickers.length()).any {
+          stickers.getJSONObject(it).optString("image_file") == fileName
+        }
+    if (!listed) throw FileNotFoundException("Unknown sticker asset: $fileName")
+    val root = context?.let { File(it.filesDir, StickerPackStore.ROOT_DIR) }
     val file = File(File(root, identifier), fileName)
-    if (!file.exists()) throw FileNotFoundException("Missing sticker asset: $fileName")
     val pfd = ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY)
-    return AssetFileDescriptor(pfd, 0, AssetFileDescriptor.UNKNOWN_LENGTH)
+    return AssetFileDescriptor(pfd, 0, file.length())
   }
 
-  override fun getType(uri: Uri): String =
-    when (matcher.match(uri)) {
-      METADATA_CODE -> "vnd.android.cursor.dir/vnd.${context?.packageName}.stickercontentprovider.metadata"
-      METADATA_CODE_FOR_SINGLE_PACK ->
-        "vnd.android.cursor.item/vnd.${context?.packageName}.stickercontentprovider.metadata"
-      STICKERS_CODE -> "vnd.android.cursor.dir/vnd.${context?.packageName}.stickercontentprovider.stickers"
+  override fun getType(uri: Uri): String {
+    val authority = "${context?.packageName}.stickercontentprovider"
+    return when (matcher.match(uri)) {
+      METADATA_CODE -> "vnd.android.cursor.dir/vnd.$authority.metadata"
+      METADATA_CODE_FOR_SINGLE_PACK -> "vnd.android.cursor.item/vnd.$authority.metadata"
+      STICKERS_CODE -> "vnd.android.cursor.dir/vnd.$authority.stickers"
       STICKERS_ASSET_CODE ->
         if (uri.lastPathSegment?.endsWith(".png") == true) "image/png" else "image/webp"
       else -> throw IllegalArgumentException("Unknown URI: $uri")
     }
+  }
 
   override fun insert(uri: Uri, values: ContentValues?): Uri? = null
 

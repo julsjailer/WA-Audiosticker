@@ -5,4 +5,10 @@
     <string name="save_success">Sticker guardado en el dispositivo</string>
     <string name="save_error">No se pudo guardar el archivo</string>
     <string name="share_error">No se pudo abrir el menú para compartir</string>
+    <string name="add_to_whatsapp">Agregar paquete a WhatsApp</string>
+    <string name="pack_added">Paquete agregado a WhatsApp.</string>
+    <string name="pack_not_added">El paquete no se agregó.</string>
+    <string name="pack_rejected_title">WhatsApp rechazó el paquete</string>
+    <string name="pack_not_supported">Tu versión de WhatsApp no permite agregar este paquete. Actualízala.</string>
+    <string name="whatsapp_not_installed">WhatsApp no está instalado en este teléfono.</string>
 </resources>

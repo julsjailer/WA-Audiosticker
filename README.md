@@ -47,4 +47,10 @@ If those secrets are not configured, CI uses the standard temporary runner debug
 
 ## Current repository notes
 
-The application ID currently remains `com.example` to avoid changing app identity during this packaging setup. Before public distribution, it should be reviewed and changed to a unique application ID, which would create a separate app identity on Android.
+The application ID is `io.github.julsjailer.audiostickers`. It installs next to older `com.example` builds; their saved gallery is not migrated.
+
+## Cómo funcionan los stickers
+
+- **Paquetes para WhatsApp:** stickers estáticos 512×512 (máximo 100 KB, de 3 a 30 por paquete, hasta 10 paquetes). **No llevan sonido**: el formato de paquetes no lo admite. Reexportar con el mismo nombre actualiza el paquete.
+- **Stickers con sonido:** la app genera un video con audio. El sticker lo crea WhatsApp (Stickers → Crear sticker), solo en cuentas que ya tengan la función. WhatsApp une el sticker y el audio al enviar; esta app no puede hacerlo.
+- **Galería de la app:** de un video solo guarda un cuadro fijo y el audio.

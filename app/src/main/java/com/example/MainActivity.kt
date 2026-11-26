@@ -2,6 +2,8 @@ package com.example
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.app.AlertDialog
+import android.content.ActivityNotFoundException
 import android.content.ContentValues
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -11,6 +13,7 @@ import android.os.Bundle
 import android.os.Environment
 import android.provider.MediaStore
 import android.util.Base64
+import android.util.Log
 import android.webkit.JavascriptInterface
 import android.webkit.PermissionRequest
 import android.webkit.ValueCallback
@@ -47,11 +50,14 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
+import com.example.stickers.StickerPackStore
 import com.example.ui.SoundStickerViewModel
 import com.example.ui.theme.MyApplicationTheme
 import java.io.File
 import java.io.FileOutputStream
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.json.JSONObject
 
 class MainActivity : ComponentActivity() {
@@ -83,6 +89,26 @@ class MainActivity : ComponentActivity() {
       pendingFileCallback = null
       if (callback != null) {
         callback.onReceiveValue(if (uri != null) arrayOf(uri) else null)
+      }
+    }
+
+  private val addStickerPackLauncher =
+    registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+      if (result.resultCode == RESULT_OK) {
+        Toast.makeText(this, getString(R.string.pack_added), Toast.LENGTH_SHORT).show()
+      } else {
+        // WhatsApp explica aquí por qué rechazó el paquete.
+        val reason = result.data?.getStringExtra("validation_error")
+        if (reason == null) {
+          Toast.makeText(this, getString(R.string.pack_not_added), Toast.LENGTH_LONG).show()
+        } else {
+          Log.e("AudioStickers", "WhatsApp validation error: $reason")
+          AlertDialog.Builder(this)
+            .setTitle(R.string.pack_rejected_title)
+            .setMessage(reason)
+            .setPositiveButton(android.R.string.ok, null)
+            .show()
+        }
       }
     }
 
@@ -168,6 +194,9 @@ class MainActivity : ComponentActivity() {
     webViewRef = null
     super.onDestroy()
   }
+
+  /** "video/mp4;codecs=..." no es un tipo válido para MediaStore ni para compartir. */
+  private fun baseMimeType(mimeType: String): String = mimeType.substringBefore(';').trim()
 
   private fun resolveMimeTypes(params: WebChromeClient.FileChooserParams?): Array<String> {
     val raw = params?.acceptTypes.orEmpty().joinToString(",").lowercase()
@@ -284,24 +313,19 @@ class MainActivity : ComponentActivity() {
   }
 
   private inner class AudioStickersBridge {
-    private fun findInstalledWhatsAppPackage(): String? {
-      val candidates = listOf("com.whatsapp", "com.whatsapp.w4b")
-      for (pkg in candidates) {
-        val installed =
-          try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-              packageManager.getPackageInfo(pkg, PackageManager.PackageInfoFlags.of(0))
-            } else {
-              @Suppress("DEPRECATION") packageManager.getPackageInfo(pkg, 0)
-            }
-            true
-          } catch (_: Exception) {
-            false
+    private fun installedWhatsAppPackages(): List<String> =
+      listOf("com.whatsapp", "com.whatsapp.w4b").filter { pkg ->
+        try {
+          if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            packageManager.getPackageInfo(pkg, PackageManager.PackageInfoFlags.of(0))
+          } else {
+            @Suppress("DEPRECATION") packageManager.getPackageInfo(pkg, 0)
           }
-        if (installed) return pkg
+          true
+        } catch (_: Exception) {
+          false
+        }
       }
-      return null
-    }
 
     @JavascriptInterface
     fun shareToWhatsAppDirect(base64Data: String, fileName: String, mimeType: String, title: String) {
@@ -316,8 +340,8 @@ class MainActivity : ComponentActivity() {
 
           val uri =
             FileProvider.getUriForFile(this@MainActivity, "$packageName.fileprovider", outFile)
-          val resolvedMime = mimeType.ifBlank { "audio/*" }
-          val waPackage = findInstalledWhatsAppPackage()
+          val resolvedMime = baseMimeType(mimeType).ifBlank { "audio/*" }
+          val waPackage = installedWhatsAppPackages().firstOrNull()
 
           val shareIntent =
             Intent(Intent.ACTION_SEND).apply {
@@ -368,7 +392,7 @@ class MainActivity : ComponentActivity() {
           val bytes = Base64.decode(base64Data, Base64.DEFAULT)
           val safeName =
             fileName.replace(Regex("[^a-zA-Z0-9._-]"), "_").ifBlank { "SoundSticker.mp4" }
-          val cleanMime = mimeType.ifBlank { "video/mp4" }
+          val cleanMime = baseMimeType(mimeType).ifBlank { "video/mp4" }
 
           if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && cleanMime.startsWith("video/")) {
             val values =
@@ -420,114 +444,67 @@ class MainActivity : ComponentActivity() {
 
     @JavascriptInterface
     fun exportStickerPackToWhatsApp(packJson: String) {
-      runOnUiThread {
+      lifecycleScope.launch {
         try {
-          val obj = org.json.JSONObject(packJson)
-          val identifier =
-            obj
-              .optString("identifier", "pack_${System.currentTimeMillis()}")
-              .replace(Regex("[^a-zA-Z0-9_-]"), "")
-              .ifBlank { "pack_1" }
-          val packName = obj.optString("name", "AudioStickers").ifBlank { "AudioStickers" }
-          val publisher = obj.optString("publisher", "AudioStickers").ifBlank { "AudioStickers" }
-          val trayBase64 = obj.optString("trayBase64", "")
-          val stickersArr = obj.optJSONArray("stickers") ?: org.json.JSONArray()
-
-          if (stickersArr.length() < 3) {
-            Toast.makeText(
-                this@MainActivity,
-                "WhatsApp requiere mínimo 3 stickers por paquete.",
-                Toast.LENGTH_LONG,
-              )
-              .show()
-            return@runOnUiThread
-          }
-
-          val packDir =
-            File(File(filesDir, "sticker_packs"), identifier).apply {
-              deleteRecursively()
-              mkdirs()
-            }
-
-          if (trayBase64.isNotBlank()) {
-            val trayBytes = Base64.decode(trayBase64, Base64.DEFAULT)
-            FileOutputStream(File(packDir, "tray.png")).use { it.write(trayBytes) }
-          }
-
-          val savedStickers = org.json.JSONArray()
-          for (i in 0 until stickersArr.length()) {
-            val st = stickersArr.optJSONObject(i) ?: continue
-            val fileName =
-              st
-                .optString("fileName", "sticker_${i + 1}.webp")
-                .replace(Regex("[^a-zA-Z0-9._-]"), "_")
-            val b64 = st.optString("base64", "")
-            val emojis = st.optString("emojis", "🔊")
-            if (b64.isBlank()) continue
-            val bytes = Base64.decode(b64, Base64.DEFAULT)
-            FileOutputStream(File(packDir, fileName)).use { it.write(bytes) }
-            savedStickers.put(
-              org.json.JSONObject().apply {
-                put("image_file", fileName)
-                put("emojis", emojis)
-              }
-            )
-          }
-
-          val metadata =
-            org.json.JSONObject().apply {
-              put("identifier", identifier)
-              put("name", packName)
-              put("publisher", publisher)
-              put("tray_image_file", "tray.png")
-              put("image_data_version", "1")
-              put("stickers", savedStickers)
-            }
-          File(packDir, "metadata.json").writeText(metadata.toString(), Charsets.UTF_8)
-
+          val (identifier, packName) = withContext(Dispatchers.IO) { savePackFromJson(packJson) }
           val authority = "$packageName.stickercontentprovider"
           contentResolver.notifyChange(Uri.parse("content://$authority/metadata"), null)
-
-          val importIntent =
-            Intent("com.whatsapp.intent.action.ENABLE_STICKER_PACK").apply {
-              putExtra("sticker_pack_id", identifier)
-              putExtra("sticker_pack_authority", authority)
-              putExtra("sticker_pack_name", packName)
-            }
-
-          // Launch the supported import action directly in an installed WhatsApp variant.
-          // A generic chooser may show WhatsApp but can fail to route the import action.
-          val whatsappPackages = listOf("com.whatsapp", "com.whatsapp.w4b")
-          var launched = false
-          var lastLaunchError: Exception? = null
-          for (targetPackage in whatsappPackages) {
-            try {
-              val targetedIntent = Intent(importIntent).setPackage(targetPackage)
-              if (targetedIntent.resolveActivity(packageManager) != null) {
-                startActivity(targetedIntent)
-                launched = true
-                break
-              }
-            } catch (e: Exception) {
-              lastLaunchError = e
-              android.util.Log.e("AudioStickers", "Failed to launch sticker import for $targetPackage", e)
-            }
-          }
-
-          if (!launched) {
-            val message =
-              if (lastLaunchError != null) {
-                "No se pudo abrir la importación de stickers en WhatsApp: ${lastLaunchError.message ?: lastLaunchError.javaClass.simpleName}"
-              } else {
-                "WhatsApp no reconoce la acción de importar este paquete. Puedes descargar .wastickers para probarlo con un importador compatible."
-              }
-            Toast.makeText(this@MainActivity, message, Toast.LENGTH_LONG).show()
-            android.util.Log.w("AudioStickers", message, lastLaunchError)
-          }
-        } catch (_: Exception) {
+          launchAddStickerPack(identifier, authority, packName)
+        } catch (e: IllegalArgumentException) {
+          Toast.makeText(this@MainActivity, e.message, Toast.LENGTH_LONG).show()
+        } catch (e: Exception) {
+          Log.e("AudioStickers", "Failed to export sticker pack", e)
           Toast.makeText(this@MainActivity, getString(R.string.share_error), Toast.LENGTH_SHORT)
             .show()
         }
+      }
+    }
+
+    private fun savePackFromJson(packJson: String): Pair<String, String> {
+      val obj = JSONObject(packJson)
+      val packName = obj.optString("name").trim().ifBlank { "AudioStickers" }
+      val items = obj.optJSONArray("stickers") ?: org.json.JSONArray()
+      val stickers =
+        (0 until items.length()).map {
+          Base64.decode(items.getJSONObject(it).getString("base64"), Base64.DEFAULT)
+        }
+      val identifier =
+        StickerPackStore.savePack(
+          filesDir = filesDir,
+          packName = packName,
+          publisher = obj.optString("publisher"),
+          tray = Base64.decode(obj.getString("trayBase64"), Base64.DEFAULT),
+          stickers = stickers,
+        )
+      return identifier to packName.take(128)
+    }
+
+    private fun launchAddStickerPack(identifier: String, authority: String, packName: String) {
+      val installed = installedWhatsAppPackages()
+      if (installed.isEmpty()) {
+        Toast.makeText(
+            this@MainActivity,
+            getString(R.string.whatsapp_not_installed),
+            Toast.LENGTH_LONG,
+          )
+          .show()
+        return
+      }
+      val intent =
+        Intent("com.whatsapp.intent.action.ENABLE_STICKER_PACK").apply {
+          putExtra("sticker_pack_id", identifier)
+          putExtra("sticker_pack_authority", authority)
+          putExtra("sticker_pack_name", packName)
+        }
+      // WhatsApp exige startActivityForResult para saber qué app envía el paquete.
+      try {
+        addStickerPackLauncher.launch(
+          if (installed.size == 1) intent.setPackage(installed.first())
+          else Intent.createChooser(intent, getString(R.string.add_to_whatsapp))
+        )
+      } catch (_: ActivityNotFoundException) {
+        Toast.makeText(this@MainActivity, getString(R.string.pack_not_supported), Toast.LENGTH_LONG)
+          .show()
       }
     }
 
