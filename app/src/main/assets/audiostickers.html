@@ -2489,15 +2489,32 @@
             if (elapsed < dur) rafId = requestAnimationFrame(drawFrame);
           };
 
-          recorder.onstop = () => {
-            cancelAnimationFrame(rafId);
+          const finishExport = () => {
+            if (rafId !== null) cancelAnimationFrame(rafId);
             if (state.visualMode === 'video' && state.loadedVideoEl) state.loadedVideoEl.pause();
             combinedStream.getTracks().forEach((t) => t.stop());
             videoExportProgressWrap.classList.remove('show');
             saveStickerVideoBtn.disabled = false;
             shareStickerVideoBtn.disabled = false;
+          };
+
+          recorder.onerror = () => {
+            try { audioSrc.stop(); } catch (_) {}
+            finishExport();
+            showToast('Falló la codificación del sticker. Intenta con otro formato o un clip más corto.');
+            resolve(null);
+          };
+
+          recorder.onstop = () => {
+            finishExport();
+            const blob = new Blob(chunks, { type: mime });
+            if (!blob.size) {
+              showToast('La exportación terminó sin datos. Vuelve a intentarlo.');
+              resolve(null);
+              return;
+            }
             const ext = mime.includes('mp4') ? 'mp4' : 'webm';
-            resolve({ blob: new Blob(chunks, { type: mime }), ext, mime });
+            resolve({ blob, ext, mime });
           };
 
           renderVisualToCanvas(exportCanvas);
