@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>AudioStickers — Sound Stickers para WhatsApp Beta</title>
+  <title>AudioStickers — Sound Stickers para WhatsApp</title>
   <style>
     :root {
       --bg-app: #0b141a;
@@ -938,13 +938,13 @@
           </svg>
         </div>
         <div class="brand-text">
-          <h1>AudioStickers <span class="brand-badge">Beta 2.26.47.10</span></h1>
-          <p>Stickers con audio incrustado adentro en 1 solo archivo</p>
+          <h1>AudioStickers</h1>
+          <p>Videos con sonido y stickers</p>
         </div>
       </div>
 
       <div class="header-actions">
-        <button id="guideHeaderBtn" class="icon-btn" type="button" aria-label="Cómo usar en WhatsApp Beta">❓</button>
+        <button id="guideHeaderBtn" class="icon-btn" type="button" aria-label="Cómo usar en WhatsApp">❓</button>
         <button id="themeToggleBtn" class="icon-btn" type="button" aria-label="Cambiar tema"><span id="themeIcon">☀️</span></button>
       </div>
     </div>
@@ -1126,7 +1126,7 @@
           <div class="wa-chat-bar">
             <div class="wa-avatar">💬</div>
             <div>
-              <div>Chat WhatsApp Beta</div>
+              <div>Vista previa</div>
               <div style="font-size:0.72rem; color:var(--text-secondary); font-weight:500;">Sound Sticker unificado (visual + audio)</div>
             </div>
           </div>
@@ -1165,10 +1165,10 @@
         <!-- EXPORTACIÓN EN 1 SOLO ARCHIVO CON AUDIO INCRUSTADO -->
         <div class="unified-export-box">
           <h4>
-            <span>4. Sticker único con audio adentro</span>
+            <span>4. Video con sonido</span>
             <span class="brand-badge">1 solo archivo</span>
           </h4>
-          <p>Fusiona la imagen/video 512×512 y el audio recortado en <strong>un único archivo listo para WhatsApp Beta 2.26.47.10</strong> (nada separado).</p>
+          <p>Une la imagen o video 512×512 y el audio recortado en <strong>un solo video</strong>, la base para crear el sticker con sonido en WhatsApp.</p>
 
           <div id="videoExportProgressWrap" class="progress-bar-wrap">
             <div id="videoExportProgressFill" class="progress-bar-fill"></div>
@@ -1176,15 +1176,15 @@
 
           <div class="export-btn-row">
             <button id="saveStickerVideoBtn" class="btn btn-primary" type="button">💾 Guardar en Galería</button>
-            <button id="shareStickerVideoBtn" class="btn btn-secondary" type="button">📲 Enviar directo a WhatsApp</button>
+            <button id="shareStickerVideoBtn" class="btn btn-secondary" type="button">📲 Enviar como video a WhatsApp</button>
           </div>
           <button id="shareAudioDirectBtn" class="btn btn-secondary btn-sm" type="button">🔊 Enviar archivo de audio (.wav) directo a WhatsApp</button>
 
           <div class="beta-steps-box">
-            <strong>Importar en WhatsApp Beta 2.26.47.10:</strong><br/>
-            1. Toca <strong>Guardar en Galería</strong> (crea el clip 512×512 con el audio incrustado adentro).<br/>
-            2. En WhatsApp abre un chat → pestaña <strong>Stickers → Crear</strong>.<br/>
-            3. Elige el archivo guardado: WhatsApp lo convierte en Sound Sticker oficial conservando su audio adentro.
+            <strong>Crear el sticker con sonido (solo si tu WhatsApp ya tiene la función):</strong><br/>
+            1. Toca <strong>Guardar en Galería</strong>.<br/>
+            2. En WhatsApp abre un chat → <strong>Stickers → Crear sticker</strong>.<br/>
+            3. Elige el video guardado y, en el botón de audio, conserva el audio del video.
           </div>
         </div>
       </div>
@@ -1209,7 +1209,7 @@
             <button id="downloadWastickersBtn" class="btn btn-secondary btn-sm" type="button">📦 Descargar .wastickers</button>
           </div>
           <div style="font-size:0.76rem; color:var(--text-secondary);">
-            Selecciona al menos <strong>3 stickers</strong> de la lista para enviar el paquete completo directo a WhatsApp o exportarlo como <code>.wastickers</code>.
+            Selecciona al menos <strong>3 stickers</strong>. Los paquetes de WhatsApp llevan <strong>solo la imagen, sin sonido</strong>.
           </div>
         </div>
 
@@ -1222,20 +1222,20 @@
   <div id="guideModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="guideTitle">
     <div class="modal-sheet">
       <div class="modal-head">
-        <h3 id="guideTitle">📖 Sound Stickers (WhatsApp Beta 2.26.47.10)</h3>
+        <h3 id="guideTitle">📖 Sound Stickers en WhatsApp</h3>
         <button id="closeGuideBtn" class="icon-btn" type="button">✕</button>
       </div>
       <div class="guide-step">
         <div class="step-num">1</div>
-        <div><strong>Un solo contenedor con audio adentro:</strong> Esta app combina tu imagen 512×512 (o video) + audio en un único archivo multimedia para que no queden separados.</div>
+        <div><strong>Un solo video:</strong> Esta app une tu imagen o video 512×512 con el audio recortado.</div>
       </div>
       <div class="guide-step">
         <div class="step-num">2</div>
-        <div><strong>Simulador fiel:</strong> En el chat el sticker aparece con `🔇`; al tocarlo rebota y reproduce su audio integrado hasta 3 veces antes de silenciarse.</div>
+        <div><strong>Simulador:</strong> Muestra una vista aproximada; en WhatsApp puede verse o sonar distinto.</div>
       </div>
       <div class="guide-step">
         <div class="step-num">3</div>
-        <div><strong>Cómo meterlo en WhatsApp Beta 2.26.47.10:</strong> Pulsa <em>Guardar en Galería</em>, luego entra a WhatsApp → <strong>Stickers → Crear</strong> y selecciona el archivo creado. WhatsApp lo convierte al instante en Sound Sticker con el sonido incrustado.</div>
+        <div><strong>En WhatsApp:</strong> Pulsa <em>Guardar en Galería</em>, entra a <strong>Stickers → Crear sticker</strong> y elige el video. La función llega poco a poco, primero a usuarios beta. Si no aparece el botón de audio, tu cuenta todavía no la tiene.</div>
       </div>
     </div>
   </div>
@@ -1575,16 +1575,6 @@
           ctx.fillText(state.visualEmoji, size / 2, size / 2 + 16);
         }
         ctx.restore();
-
-        ctx.save();
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.22)';
-        ctx.lineWidth = 8;
-        ctx.beginPath();
-        if (state.visualShape === 'circle') ctx.arc(size / 2, size / 2, size / 2 - 4, 0, Math.PI * 2);
-        else if (state.visualShape === 'rounded') ctx.roundRect(4, 4, size - 8, size - 8, 60);
-        else ctx.rect(4, 4, size - 8, size - 8);
-        ctx.stroke();
-        ctx.restore();
       }
 
       function canvasToWebpBlob(canvas) {
@@ -1791,7 +1781,7 @@
             cleanupMic();
             const blob = new Blob(state.recordedChunks, { type: rec.mimeType || mime || 'audio/webm' });
             resetRecorderUI();
-            if (blob.size > 200) await loadAudioBlob(blob, 'Grabación de voz');
+            if (blob.size > 200) await loadAudioBlob(blob, 'Grabación de voz').catch(() => showToast('No se pudo procesar la grabación. Intenta de nuevo.'));
             else showToast('Grabación muy corta. Intenta de nuevo.');
           };
 
@@ -1889,7 +1879,7 @@
       audioFileInput.addEventListener('change', (e) => {
         const f = e.target.files && e.target.files[0];
         e.target.value = '';
-        if (f) loadAudioBlob(f, f.name);
+        if (f) loadAudioBlob(f, f.name).catch(() => showToast('No se pudo leer ese audio. Prueba con MP3, M4A, OGG o WAV.'));
       });
 
       function initSfxGrid() {
@@ -2489,15 +2479,32 @@
             if (elapsed < dur) rafId = requestAnimationFrame(drawFrame);
           };
 
-          recorder.onstop = () => {
-            cancelAnimationFrame(rafId);
+          const finishExport = () => {
+            if (rafId !== null) cancelAnimationFrame(rafId);
             if (state.visualMode === 'video' && state.loadedVideoEl) state.loadedVideoEl.pause();
             combinedStream.getTracks().forEach((t) => t.stop());
             videoExportProgressWrap.classList.remove('show');
             saveStickerVideoBtn.disabled = false;
             shareStickerVideoBtn.disabled = false;
+          };
+
+          recorder.onerror = () => {
+            try { audioSrc.stop(); } catch (_) {}
+            finishExport();
+            showToast('Falló la codificación del sticker. Intenta con otro formato o un clip más corto.');
+            resolve(null);
+          };
+
+          recorder.onstop = () => {
+            finishExport();
+            const blob = new Blob(chunks, { type: mime });
+            if (!blob.size) {
+              showToast('La exportación terminó sin datos. Vuelve a intentarlo.');
+              resolve(null);
+              return;
+            }
             const ext = mime.includes('mp4') ? 'mp4' : 'webm';
-            resolve({ blob: new Blob(chunks, { type: mime }), ext, mime });
+            resolve({ blob, ext, mime });
           };
 
           renderVisualToCanvas(exportCanvas);
@@ -2522,7 +2529,8 @@
           const r = new FileReader();
           r.onloadend = () => {
             const s = String(r.result || '');
-            resolve(s.includes(',') ? s.split(',')[1] : s);
+            // El tipo puede llevar comas (codecs=avc1,mp4a); el base64 va tras la última.
+            resolve(s.slice(s.lastIndexOf(',') + 1));
           };
           r.onerror = reject;
           r.readAsDataURL(blob);
@@ -2578,7 +2586,7 @@
         a.click();
         a.remove();
         setTimeout(() => URL.revokeObjectURL(url), 1500);
-        showToast(`Sticker único guardado (${fileName}) — Impórtalo en WhatsApp Beta > Crear`);
+        showToast(`Sticker único guardado (${fileName}) — Impórtalo en WhatsApp > Stickers > Crear sticker`);
       }
 
       saveStickerVideoBtn.addEventListener('click', () => exportUnifiedSticker(false));
@@ -2797,7 +2805,8 @@
         state.selectedPackIds.add(targetId);
         updatePackCountBadge();
         setEditingSticker(null);
-        showToast(wasEditing ? `"${title}" actualizado en la base de datos` : `"${title}" guardado en la base de datos`);
+        const stillNote = state.visualMode === 'video' ? ' (imagen fija; el video usa "Guardar en Galería")' : '';
+        showToast((wasEditing ? `"${title}" actualizado` : `"${title}" guardado`) + stillNote);
         if (window.innerWidth < 980) switchTab('gallery');
       });
 
