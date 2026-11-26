@@ -1,0 +1,6 @@
+{
+  "name": "AudioStickers",
+  "description": "Crea, recorta y comparte stickers de audio para WhatsApp desde tu dispositivo o navegador.",
+  "requestFramePermissions": ["microphone"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

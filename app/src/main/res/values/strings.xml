@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">AudioStickers</string>
+    <string name="share_chooser_title">Compartir sticker de audio en WhatsApp</string>
+    <string name="mic_permission_required">Se necesita permiso de micrófono para grabar audio.</string>
+    <string name="save_success">Sticker guardado en el dispositivo</string>
+    <string name="save_error">No se pudo guardar el archivo</string>
+    <string name="share_error">No se pudo abrir el menú para compartir</string>
+</resources>

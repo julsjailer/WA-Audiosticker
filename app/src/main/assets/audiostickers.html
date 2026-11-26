@@ -1,0 +1,3224 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>AudioStickers — Sound Stickers para WhatsApp Beta</title>
+  <style>
+    :root {
+      --bg-app: #0b141a;
+      --bg-surface: #111b21;
+      --bg-card: #202c33;
+      --bg-card-alt: #182229;
+      --bg-input: #2a3942;
+      --border: #2f3e46;
+      --text-primary: #e9edef;
+      --text-secondary: #8696a0;
+      --accent: #00a884;
+      --accent-bright: #25d366;
+      --accent-soft: rgba(0, 168, 132, 0.16);
+      --danger: #ff5a5f;
+      --danger-soft: rgba(255, 90, 95, 0.16);
+      --warning: #ffb020;
+      --warning-soft: rgba(255, 176, 32, 0.15);
+      --bubble-in: #202c33;
+      --shadow: 0 10px 28px rgba(0, 0, 0, 0.38);
+      --radius-lg: 20px;
+      --radius-md: 14px;
+      --font-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    html[data-theme="light"] {
+      --bg-app: #efeae2;
+      --bg-surface: #ffffff;
+      --bg-card: #f5f7f9;
+      --bg-card-alt: #eef1f4;
+      --bg-input: #eceff2;
+      --border: #d7dde2;
+      --text-primary: #111b21;
+      --text-secondary: #54656f;
+      --accent: #008069;
+      --accent-bright: #1ea952;
+      --accent-soft: rgba(0, 128, 105, 0.12);
+      --danger: #d93025;
+      --danger-soft: rgba(217, 48, 37, 0.11);
+      --warning: #b26a00;
+      --warning-soft: rgba(255, 176, 32, 0.16);
+      --bubble-in: #ffffff;
+      --shadow: 0 8px 24px rgba(17, 27, 33, 0.08);
+    }
+
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      min-height: 100%;
+      background: var(--bg-app);
+      color: var(--text-primary);
+      font-family: var(--font-sans);
+      line-height: 1.45;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+    }
+
+    button, input { font-family: inherit; }
+
+    .app-header {
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      background: var(--bg-surface);
+      border-bottom: 1px solid var(--border);
+      padding: calc(12px + env(safe-area-inset-top, 0px)) 16px 12px;
+      backdrop-filter: blur(12px);
+    }
+
+    .header-inner {
+      max-width: 1180px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .brand { display: flex; align-items: center; gap: 11px; min-width: 0; }
+
+    .brand-logo {
+      width: 42px;
+      height: 42px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-bright));
+      display: grid;
+      place-items: center;
+      flex-shrink: 0;
+      box-shadow: 0 4px 14px rgba(37, 211, 102, 0.28);
+    }
+
+    .brand-text h1 {
+      margin: 0;
+      font-size: 1.1rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .brand-badge {
+      font-size: 0.67rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: var(--accent-bright);
+    }
+
+    .brand-text p {
+      margin: 1px 0 0;
+      font-size: 0.76rem;
+      color: var(--text-secondary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .header-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+
+    .icon-btn {
+      min-width: 44px;
+      height: 44px;
+      padding: 0 12px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: var(--bg-card);
+      color: var(--text-primary);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      font-size: 0.85rem;
+      font-weight: 700;
+    }
+
+    .mobile-tabs {
+      max-width: 1180px;
+      width: 100%;
+      margin: 14px auto 0;
+      padding: 0 16px;
+    }
+
+    .tabs-pill {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 4px;
+      gap: 4px;
+    }
+
+    .tab-btn {
+      min-height: 46px;
+      border: none;
+      border-radius: 12px;
+      background: transparent;
+      color: var(--text-secondary);
+      font-size: 0.92rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .tab-btn.active { background: var(--accent); color: #ffffff; }
+
+    .count-pill {
+      font-size: 0.74rem;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.22);
+      color: inherit;
+    }
+
+    .tab-btn:not(.active) .count-pill { background: var(--bg-input); color: var(--text-primary); }
+
+    .main-layout {
+      max-width: 1180px;
+      width: 100%;
+      margin: 14px auto 0;
+      padding: 0 16px;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 18px;
+      flex: 1;
+    }
+
+    @media (min-width: 980px) {
+      .mobile-tabs { display: none; }
+      .main-layout { grid-template-columns: 1.08fr 0.92fr; align-items: start; margin-top: 20px; }
+      .panel-view { display: block !important; }
+    }
+
+    .panel-view.hidden-mobile { display: none; }
+
+    .card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 18px;
+      box-shadow: var(--shadow);
+    }
+
+    .card + .card { margin-top: 16px; }
+
+    .section-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+
+    .section-title {
+      margin: 0;
+      font-size: 1.03rem;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .step-badge {
+      font-size: 0.72rem;
+      font-weight: 800;
+      padding: 3px 9px;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: var(--accent-bright);
+    }
+
+    .btn {
+      min-height: 48px;
+      padding: 10px 15px;
+      border-radius: 13px;
+      border: none;
+      font-size: 0.9rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: transform 0.14s ease, opacity 0.15s ease;
+    }
+
+    .btn:active { transform: scale(0.97); }
+    .btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent), var(--accent-bright));
+      color: #ffffff;
+      box-shadow: 0 4px 16px rgba(0, 168, 132, 0.28);
+    }
+
+    .btn-secondary {
+      background: var(--bg-input);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+    }
+
+    .btn-danger {
+      background: var(--danger-soft);
+      color: var(--danger);
+      border: 1px solid rgba(255, 90, 95, 0.35);
+    }
+
+    .btn-sm { min-height: 42px; padding: 7px 12px; font-size: 0.82rem; border-radius: 11px; }
+
+    /* Visual Creator */
+    .visual-source-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    @media (max-width: 480px) { .visual-source-grid { grid-template-columns: 1fr; } }
+
+    .source-tile-btn {
+      min-height: 52px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      background: var(--bg-card);
+      color: var(--text-primary);
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .source-tile-btn.active {
+      border-color: var(--accent-bright);
+      background: var(--accent-soft);
+      color: var(--accent-bright);
+    }
+
+    .crop-workspace {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .crop-stage-wrap {
+      position: relative;
+      width: 224px;
+      height: 224px;
+      border-radius: 22px;
+      overflow: hidden;
+      border: 2px dashed var(--border);
+      background-image:
+        linear-gradient(45deg, rgba(134, 150, 160, 0.14) 25%, transparent 25%),
+        linear-gradient(-45deg, rgba(134, 150, 160, 0.14) 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, rgba(134, 150, 160, 0.14) 75%),
+        linear-gradient(-45deg, transparent 75%, rgba(134, 150, 160, 0.14) 75%);
+      background-size: 20px 20px;
+      background-position: 0 0, 0 10px, 10px -10px, -10px 0;
+      touch-action: none;
+      cursor: grab;
+    }
+
+    #visualCanvas { width: 100%; height: 100%; display: block; }
+
+    .crop-badge {
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      background: rgba(11, 20, 26, 0.8);
+      color: #ffffff;
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 999px;
+      pointer-events: none;
+    }
+
+    .crop-controls { width: 100%; display: flex; flex-direction: column; gap: 10px; }
+
+    .control-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.83rem;
+      font-weight: 700;
+    }
+
+    .control-row input[type="range"] { flex: 1; accent-color: var(--accent-bright); height: 28px; cursor: pointer; }
+
+    .chip-row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+
+    .mini-chip {
+      min-height: 36px;
+      padding: 5px 11px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: var(--bg-input);
+      color: var(--text-secondary);
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .mini-chip.active { border-color: var(--accent-bright); background: var(--accent-soft); color: var(--accent-bright); }
+
+    .emoji-strip { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
+
+    .emoji-chip {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--bg-input);
+      font-size: 1.25rem;
+      cursor: pointer;
+      display: grid;
+      place-items: center;
+    }
+
+    .emoji-chip.selected { border-color: var(--accent-bright); background: var(--accent-soft); }
+
+    .video-audio-box {
+      width: 100%;
+      background: var(--bg-card-alt);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px 12px;
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+      font-size: 0.82rem;
+    }
+
+    .video-audio-box.show { display: flex; }
+
+    /* Audio Selector */
+    .audio-mode-tabs {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 4px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 4px;
+      margin-bottom: 14px;
+    }
+
+    .mode-btn {
+      min-height: 44px;
+      border: none;
+      border-radius: 10px;
+      background: transparent;
+      color: var(--text-secondary);
+      font-size: 0.8rem;
+      font-weight: 700;
+      cursor: pointer;
+      padding: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+    }
+
+    .mode-btn.active { background: var(--accent); color: #ffffff; }
+
+    .audio-mode-pane { display: none; }
+    .audio-mode-pane.active { display: block; }
+
+    .recorder-stage {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 18px 14px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 12px;
+    }
+
+    .limit-group { display: inline-flex; background: var(--bg-input); border-radius: 10px; padding: 3px; gap: 3px; }
+
+    .limit-chip {
+      border: none;
+      background: transparent;
+      color: var(--text-secondary);
+      font-size: 0.77rem;
+      font-weight: 700;
+      padding: 6px 10px;
+      border-radius: 7px;
+      cursor: pointer;
+    }
+
+    .limit-chip.active { background: var(--accent-soft); color: var(--accent-bright); }
+
+    .record-btn-wrap { position: relative; width: 100px; height: 100px; display: grid; place-items: center; }
+
+    .pulse-ring {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      border: 3px solid var(--danger);
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .recording-active .pulse-ring { animation: pulseRing 1.3s ease-out infinite; }
+    @keyframes pulseRing {
+      0% { transform: scale(0.84); opacity: 0.8; }
+      100% { transform: scale(1.25); opacity: 0; }
+    }
+
+    .record-btn {
+      width: 82px;
+      height: 82px;
+      border-radius: 50%;
+      border: none;
+      cursor: pointer;
+      background: linear-gradient(145deg, var(--accent-bright), var(--accent));
+      color: #ffffff;
+      display: grid;
+      place-items: center;
+      box-shadow: 0 8px 22px rgba(0, 168, 132, 0.35);
+    }
+
+    .recording-active .record-btn {
+      background: linear-gradient(145deg, #ff6b6f, #e53935);
+      box-shadow: 0 8px 22px rgba(255, 90, 95, 0.42);
+    }
+
+    .timer-display { font-variant-numeric: tabular-nums; font-size: 1.6rem; font-weight: 800; }
+    .timer-display span { font-size: 0.9rem; color: var(--text-secondary); font-weight: 600; }
+
+    .level-bars { width: 100%; max-width: 280px; height: 30px; display: flex; align-items: center; justify-content: center; gap: 4px; }
+    .level-bar { flex: 1; max-width: 7px; height: 6px; border-radius: 99px; background: var(--border); transition: height 0.08s ease; }
+    .recording-active .level-bar { background: var(--accent-bright); }
+
+    .alert-box {
+      width: 100%;
+      border-radius: 12px;
+      padding: 12px;
+      text-align: left;
+      display: none;
+      flex-direction: column;
+      gap: 8px;
+      font-size: 0.85rem;
+      background: var(--danger-soft);
+      border: 1px solid rgba(255, 90, 95, 0.4);
+    }
+    .alert-box.show { display: flex; }
+
+    .upload-zone {
+      border: 2px dashed var(--border);
+      border-radius: var(--radius-md);
+      background: var(--bg-card);
+      padding: 20px 14px;
+      text-align: center;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .sfx-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+    @media (min-width: 520px) { .sfx-grid { grid-template-columns: repeat(4, 1fr); } }
+
+    .sfx-btn {
+      min-height: 66px;
+      padding: 10px 8px;
+      border-radius: 13px;
+      border: 1px solid var(--border);
+      background: var(--bg-card);
+      color: var(--text-primary);
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      font-size: 0.8rem;
+      font-weight: 700;
+    }
+
+    .sfx-btn.active { border-color: var(--accent-bright); background: var(--accent-soft); color: var(--accent-bright); }
+    .sfx-icon { font-size: 1.4rem; }
+
+    /* Trimmer */
+    .trimmer-panel { display: none; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border); }
+    .trimmer-panel.visible { display: block; }
+
+    .waveform-box { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 8px; touch-action: none; user-select: none; }
+    #waveformCanvas { width: 100%; height: 104px; display: block; cursor: ew-resize; }
+
+    .trim-controls { margin-top: 10px; display: grid; grid-template-columns: 1fr; gap: 10px; }
+    @media (min-width: 540px) { .trim-controls { grid-template-columns: 1fr 1fr; } }
+
+    .trim-box { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 8px 10px; display: flex; flex-direction: column; gap: 6px; }
+    .trim-box-head { display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: 700; }
+    .time-badge { font-variant-numeric: tabular-nums; color: var(--accent-bright); background: var(--accent-soft); padding: 1px 7px; border-radius: 6px; }
+    .range-row { display: flex; align-items: center; gap: 6px; }
+    .nudge-btn { min-width: 34px; height: 34px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-input); color: var(--text-primary); font-weight: 800; cursor: pointer; }
+
+    .trim-summary-row {
+      margin-top: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+      background: var(--accent-soft);
+      padding: 9px 12px;
+      border-radius: 10px;
+      font-size: 0.84rem;
+      font-weight: 700;
+    }
+
+    /* WhatsApp Sound Sticker Simulator */
+    .wa-chat-simulator {
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border);
+      overflow: hidden;
+      background-color: #0b141a;
+      background-image: radial-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+      background-size: 18px 18px;
+      padding: 16px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    html[data-theme="light"] .wa-chat-simulator {
+      background-color: #e5ddd5;
+      background-image: radial-gradient(rgba(0, 0, 0, 0.05) 1px, transparent 1px);
+    }
+
+    .wa-chat-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid rgba(134, 150, 160, 0.2);
+      font-size: 0.82rem;
+      font-weight: 700;
+    }
+
+    .wa-avatar { width: 30px; height: 30px; border-radius: 50%; background: var(--accent); color: #fff; display: grid; place-items: center; font-size: 0.9rem; }
+
+    .wa-msg-in {
+      align-self: flex-start;
+      background: var(--bubble-in);
+      color: var(--text-primary);
+      padding: 8px 12px;
+      border-radius: 0 14px 14px 14px;
+      font-size: 0.84rem;
+      max-width: 84%;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.16);
+    }
+
+    .wa-sticker-msg { align-self: flex-end; display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+
+    .sound-sticker-trigger {
+      position: relative;
+      width: 172px;
+      height: 172px;
+      border: none;
+      padding: 0;
+      background: transparent;
+      cursor: pointer;
+      border-radius: 22px;
+      outline: none;
+    }
+
+    .sound-sticker-trigger.bouncing { animation: stickerBounce 0.45s cubic-bezier(0.22, 1, 0.36, 1); }
+
+    @keyframes stickerBounce {
+      0% { transform: scale(1); }
+      30% { transform: scale(1.1) rotate(-2deg); }
+      60% { transform: scale(0.95) rotate(2deg); }
+      100% { transform: scale(1) rotate(0deg); }
+    }
+
+    #simCanvas { width: 172px; height: 172px; display: block; border-radius: 22px; filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.35)); }
+
+    .speaker-corner-badge {
+      position: absolute;
+      right: 6px;
+      bottom: 6px;
+      min-width: 34px;
+      height: 34px;
+      padding: 0 8px;
+      border-radius: 999px;
+      background: rgba(17, 27, 33, 0.88);
+      border: 1.5px solid rgba(255, 255, 255, 0.22);
+      color: #ffffff;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      font-size: 0.82rem;
+      font-weight: 800;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+    }
+
+    .speaker-corner-badge.active { background: var(--accent-bright); color: #082416; border-color: #ffffff; transform: scale(1.06); }
+
+    .wa-sticker-meta {
+      font-size: 0.7rem;
+      background: rgba(17, 27, 33, 0.72);
+      color: #d1d7db;
+      padding: 2px 8px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .sim-status-bar { margin-top: 10px; text-align: center; font-size: 0.83rem; font-weight: 700; color: var(--text-secondary); }
+    .sim-status-bar.playing { color: var(--accent-bright); }
+
+    .text-input {
+      width: 100%;
+      height: 48px;
+      padding: 0 14px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: var(--bg-input);
+      color: var(--text-primary);
+      font-size: 0.94rem;
+      outline: none;
+    }
+    .text-input:focus { border-color: var(--accent-bright); }
+
+    /* Unified Export Box */
+    .unified-export-box {
+      margin-top: 14px;
+      background: var(--bg-card);
+      border: 1px solid var(--accent);
+      border-radius: var(--radius-md);
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .unified-export-box h4 {
+      margin: 0;
+      font-size: 0.94rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .unified-export-box p { margin: 0; font-size: 0.8rem; color: var(--text-secondary); }
+
+    .export-btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    @media (max-width: 460px) { .export-btn-row { grid-template-columns: 1fr; } }
+
+    .progress-bar-wrap { width: 100%; height: 8px; border-radius: 999px; background: var(--bg-input); overflow: hidden; display: none; }
+    .progress-bar-wrap.show { display: block; }
+    .progress-bar-fill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--accent), var(--accent-bright)); transition: width 0.1s linear; }
+
+    .beta-steps-box {
+      background: var(--bg-card-alt);
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-size: 0.78rem;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+
+    /* Gallery */
+    .gallery-grid { display: grid; grid-template-columns: 1fr; gap: 12px; margin-top: 12px; }
+    @media (min-width: 560px) { .gallery-grid { grid-template-columns: 1fr 1fr; } }
+    @media (min-width: 980px) { .gallery-grid { grid-template-columns: 1fr; } }
+
+    .gallery-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 12px;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .gallery-thumb-btn {
+      position: relative;
+      width: 82px;
+      height: 82px;
+      border-radius: 14px;
+      border: none;
+      padding: 0;
+      background: transparent;
+      flex-shrink: 0;
+      cursor: pointer;
+      overflow: hidden;
+    }
+
+    .gallery-thumb-btn.bouncing { animation: stickerBounce 0.42s ease; }
+    .gallery-thumb-btn img { width: 100%; height: 100%; object-fit: cover; display: block; border-radius: 14px; }
+
+    .gallery-corner-icon {
+      position: absolute;
+      right: 4px;
+      bottom: 4px;
+      background: rgba(17, 27, 33, 0.85);
+      color: #fff;
+      font-size: 0.72rem;
+      padding: 2px 6px;
+      border-radius: 999px;
+      font-weight: 800;
+    }
+    .gallery-corner-icon.active { background: var(--accent-bright); color: #082416; }
+
+    .gallery-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+    .gallery-title { margin: 0; font-size: 0.94rem; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .gallery-sub { font-size: 0.76rem; color: var(--text-secondary); }
+    .gallery-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+
+    .pack-check {
+      width: 24px;
+      height: 24px;
+      accent-color: var(--accent-bright);
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .pack-builder-box {
+      margin-top: 12px;
+      background: var(--bg-card);
+      border: 1px solid var(--accent);
+      border-radius: var(--radius-md);
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .pack-builder-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      font-size: 0.88rem;
+      font-weight: 800;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 32px 16px;
+      background: var(--bg-card);
+      border: 1px dashed var(--border);
+      border-radius: var(--radius-md);
+      color: var(--text-secondary);
+    }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 60;
+      background: rgba(0, 0, 0, 0.68);
+      backdrop-filter: blur(4px);
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+      padding: 16px;
+    }
+    @media (min-width: 640px) { .modal-backdrop { align-items: center; } }
+    .modal-backdrop.open { display: flex; }
+
+    .modal-sheet {
+      width: 100%;
+      max-width: 480px;
+      max-height: 88vh;
+      overflow-y: auto;
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      padding: 20px;
+      box-shadow: var(--shadow);
+    }
+
+    .modal-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 14px; }
+    .modal-head h3 { margin: 0; font-size: 1.05rem; font-weight: 800; }
+
+    .guide-step {
+      display: flex;
+      gap: 10px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-size: 0.85rem;
+      margin-bottom: 8px;
+    }
+
+    .step-num {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: var(--accent-soft);
+      color: var(--accent-bright);
+      font-weight: 800;
+      display: grid;
+      place-items: center;
+      flex-shrink: 0;
+    }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+      transform: translateX(-50%) translateY(24px);
+      background: var(--bg-card);
+      color: var(--text-primary);
+      border: 1px solid var(--accent-bright);
+      padding: 10px 18px;
+      border-radius: 999px;
+      font-size: 0.86rem;
+      font-weight: 700;
+      box-shadow: var(--shadow);
+      z-index: 90;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease, transform 0.2s ease;
+      max-width: calc(100vw - 32px);
+      text-align: center;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; }
+  </style>
+</head>
+<body>
+
+  <header class="app-header">
+    <div class="header-inner">
+      <div class="brand">
+        <div class="brand-logo" aria-hidden="true">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="5"/>
+            <path d="M10 9l5 3-5 3V9z" fill="#ffffff"/>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <h1>AudioStickers <span class="brand-badge">Beta 2.26.47.10</span></h1>
+          <p>Stickers con audio incrustado adentro en 1 solo archivo</p>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <button id="guideHeaderBtn" class="icon-btn" type="button" aria-label="Cómo usar en WhatsApp Beta">❓</button>
+        <button id="themeToggleBtn" class="icon-btn" type="button" aria-label="Cambiar tema"><span id="themeIcon">☀️</span></button>
+      </div>
+    </div>
+  </header>
+
+  <nav class="mobile-tabs" aria-label="Navegación principal">
+    <div class="tabs-pill">
+      <button id="tabCreateBtn" class="tab-btn active" type="button">🎨 Crear Sticker</button>
+      <button id="tabGalleryBtn" class="tab-btn" type="button">
+        🗂️ Galería <span id="galleryCountTab" class="count-pill">0</span>
+      </button>
+    </div>
+  </nav>
+
+  <main class="main-layout">
+    <!-- CREACIÓN HÍBRIDA -->
+    <section id="createPanel" class="panel-view">
+      <!-- 1. VISUAL 512x512 -->
+      <div class="card">
+        <div class="section-head">
+          <h2 class="section-title">1. Visual del Sticker <span class="step-badge">1:1 • 512×512</span></h2>
+        </div>
+
+        <div class="visual-source-grid">
+          <button id="pickImageBtn" class="source-tile-btn" type="button">🖼️ Subir Imagen</button>
+          <button id="pickVideoBtn" class="source-tile-btn" type="button">🎬 Subir Video</button>
+          <button id="useEmojiVisualBtn" class="source-tile-btn active" type="button">😎 Sticker Emoji</button>
+        </div>
+
+        <input id="imageFileInput" class="sr-only" type="file" accept="image/png,image/jpeg,image/webp,image/*" />
+        <input id="videoFileInput" class="sr-only" type="file" accept="video/mp4,video/webm,video/*" />
+
+        <div class="crop-workspace">
+          <div id="cropStageWrap" class="crop-stage-wrap" title="Arrastra para encuadrar 1:1">
+            <canvas id="visualCanvas" width="512" height="512"></canvas>
+            <div id="visualTypeBadge" class="crop-badge">512×512 • Emoji</div>
+          </div>
+
+          <div class="crop-controls">
+            <div id="zoomRow" class="control-row">
+              <span>🔍 Zoom</span>
+              <input id="visualZoomSlider" type="range" min="1" max="3" step="0.05" value="1" />
+              <span id="zoomLabel">1.0x</span>
+            </div>
+
+            <div class="chip-row">
+              <span style="font-size:0.8rem; color:var(--text-secondary); font-weight:700;">Forma:</span>
+              <button type="button" class="mini-chip active" data-shape="rounded">Cuadrado suave</button>
+              <button type="button" class="mini-chip" data-shape="circle">Círculo</button>
+              <button type="button" class="mini-chip" data-shape="square">Cuadrado 1:1</button>
+            </div>
+
+            <div id="emojiVisualPicker" class="emoji-strip"></div>
+
+            <div id="videoAudioBox" class="video-audio-box">
+              <span id="videoInfoLabel">🎬 Video cargado</span>
+              <button id="extractVideoAudioBtn" class="btn btn-secondary btn-sm" type="button">🔊 Conservar audio del video</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. AUDIO INCRUSTADO (3 MODOS) -->
+      <div class="card">
+        <div class="section-head">
+          <h2 class="section-title">2. Audio que irá adentro <span class="step-badge">Máx 10s</span></h2>
+        </div>
+
+        <div class="audio-mode-tabs" role="tablist">
+          <button id="modeMicBtn" class="mode-btn active" type="button" data-mode="mic">🎙️ Grabar Voz</button>
+          <button id="modeFileBtn" class="mode-btn" type="button" data-mode="file">📁 Subir Audio</button>
+          <button id="modeSfxBtn" class="mode-btn" type="button" data-mode="sfx">⚡ Efectos</button>
+        </div>
+
+        <div id="paneMic" class="audio-mode-pane active">
+          <div id="recorderStage" class="recorder-stage">
+            <div style="display:flex; align-items:center; justify-content:space-between; width:100%; gap:8px; flex-wrap:wrap;">
+              <span id="recordStatusText" style="font-size:0.82rem; font-weight:700; color:var(--text-secondary);">Listo para grabar reacción</span>
+              <div class="limit-group">
+                <button type="button" class="limit-chip" data-limit="6">6s</button>
+                <button type="button" class="limit-chip active" data-limit="8">8s</button>
+                <button type="button" class="limit-chip" data-limit="10">10s</button>
+              </div>
+            </div>
+
+            <div class="record-btn-wrap">
+              <div class="pulse-ring"></div>
+              <button id="recordBtn" class="record-btn" type="button" aria-label="Grabar o detener">
+                <svg id="micSvg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
+                  <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                  <line x1="12" y1="19" x2="12" y2="22"/>
+                </svg>
+                <svg id="stopSvg" style="display:none" width="28" height="28" viewBox="0 0 24 24" fill="currentColor">
+                  <rect x="6" y="6" width="12" height="12" rx="3"/>
+                </svg>
+              </button>
+            </div>
+
+            <div id="timerDisplay" class="timer-display">00:00 <span>/ 00:08</span></div>
+            <div id="levelBars" class="level-bars" aria-hidden="true"></div>
+
+            <div id="micAlertBox" class="alert-box" role="alert">
+              <strong id="micAlertTitle">Permiso de micrófono denegado</strong>
+              <span id="micAlertBody">Activa el permiso del micrófono o usa "Subir Audio" / "Efectos".</span>
+              <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                <button id="retryMicBtn" class="btn btn-secondary btn-sm" type="button">🔄 Reintentar</button>
+                <button id="switchToSfxBtn" class="btn btn-primary btn-sm" type="button">⚡ Ir a Efectos</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="paneFile" class="audio-mode-pane">
+          <div id="uploadAudioZone" class="upload-zone" role="button" tabindex="0">
+            <div style="font-size:1.5rem;">🎵</div>
+            <strong>Toca para subir audio (MP3, OGG, WAV, M4A)</strong>
+            <small style="color:var(--text-secondary);">Recorta el fragmento que irá dentro del sticker</small>
+            <input id="audioFileInput" class="sr-only" type="file" accept="audio/*,.mp3,.wav,.ogg,.m4a,.aac,.webm,.opus" />
+          </div>
+        </div>
+
+        <div id="paneSfx" class="audio-mode-pane">
+          <div id="sfxGrid" class="sfx-grid"></div>
+        </div>
+
+        <div id="trimmerPanel" class="trimmer-panel">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; font-size:0.82rem; color:var(--text-secondary);">
+            <strong id="audioSourceLabel" style="color:var(--text-primary);">Audio cargado</strong>
+            <span id="audioTotalLabel">0.0 s</span>
+          </div>
+
+          <div class="waveform-box">
+            <canvas id="waveformCanvas"></canvas>
+          </div>
+
+          <div class="trim-controls">
+            <div class="trim-box">
+              <div class="trim-box-head">
+                <span>Inicio</span>
+                <span id="trimStartLabel" class="time-badge">00:00.0</span>
+              </div>
+              <div class="range-row">
+                <button type="button" class="nudge-btn" data-target="start" data-delta="-0.2">-</button>
+                <input id="trimStartSlider" type="range" min="0" max="8" step="0.05" value="0" />
+                <button type="button" class="nudge-btn" data-target="start" data-delta="0.2">+</button>
+              </div>
+            </div>
+
+            <div class="trim-box">
+              <div class="trim-box-head">
+                <span>Fin</span>
+                <span id="trimEndLabel" class="time-badge">00:00.0</span>
+              </div>
+              <div class="range-row">
+                <button type="button" class="nudge-btn" data-target="end" data-delta="-0.2">-</button>
+                <input id="trimEndSlider" type="range" min="0" max="8" step="0.05" value="8" />
+                <button type="button" class="nudge-btn" data-target="end" data-delta="0.2">+</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="trim-summary-row">
+            <span>✂️ Audio dentro del sticker: <strong id="trimDurationLabel">0.0 s</strong></span>
+            <button id="previewAudioBtn" class="btn btn-secondary btn-sm" type="button">▶️ Escuchar</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SIMULADOR + EXPORTAR UNIFICADO + GALERÍA -->
+    <section>
+      <div class="card">
+        <div class="section-head">
+          <h2 class="section-title">3. Simulador WhatsApp <span class="step-badge">Audio adentro • 3x</span></h2>
+        </div>
+
+        <div class="wa-chat-simulator">
+          <div class="wa-chat-bar">
+            <div class="wa-avatar">💬</div>
+            <div>
+              <div>Chat WhatsApp Beta</div>
+              <div style="font-size:0.72rem; color:var(--text-secondary); font-weight:500;">Sound Sticker unificado (visual + audio)</div>
+            </div>
+          </div>
+
+          <div class="wa-msg-in">A ver ese sticker con audio 😂</div>
+
+          <div class="wa-sticker-msg">
+            <button id="soundStickerTrigger" class="sound-sticker-trigger" type="button" aria-label="Tocar Sound Sticker para reproducir">
+              <canvas id="simCanvas" width="512" height="512"></canvas>
+              <span id="speakerCornerBadge" class="speaker-corner-badge">
+                <span id="speakerIcon">🔇</span>
+                <span id="loopCounterBadge" style="display:none;">1/3</span>
+              </span>
+            </button>
+            <div class="wa-sticker-meta">
+              <span id="simDurationText">Sin audio</span>
+              <span>•</span>
+              <span>15:05 ✓✓</span>
+            </div>
+          </div>
+        </div>
+
+        <div id="simStatusBar" class="sim-status-bar">
+          🔇 Silenciado por defecto — Toca el sticker para oír su audio (máx. 3x)
+        </div>
+
+        <div style="margin-top:14px; display:flex; flex-direction:column; gap:10px;">
+          <div id="editingBanner" style="display:none; align-items:center; justify-content:space-between; gap:8px; padding:8px 12px; border-radius:10px; background:rgba(0,168,132,0.14); border:1px solid rgba(0,168,132,0.35); font-size:0.82rem;">
+            <span id="editingBannerText">✏️ Editando sticker guardado</span>
+            <button id="cancelEditBtn" class="btn btn-secondary btn-sm" type="button" style="padding:4px 10px;">Nuevo</button>
+          </div>
+          <input id="stickerNameInput" class="text-input" type="text" maxlength="44" placeholder="Nombre del Sound Sticker (ej: Risa épica)" />
+          <button id="saveToGalleryBtn" class="btn btn-secondary" type="button">🗂️ Guardar en Galería de la App</button>
+        </div>
+
+        <!-- EXPORTACIÓN EN 1 SOLO ARCHIVO CON AUDIO INCRUSTADO -->
+        <div class="unified-export-box">
+          <h4>
+            <span>4. Sticker único con audio adentro</span>
+            <span class="brand-badge">1 solo archivo</span>
+          </h4>
+          <p>Fusiona la imagen/video 512×512 y el audio recortado en <strong>un único archivo listo para WhatsApp Beta 2.26.47.10</strong> (nada separado).</p>
+
+          <div id="videoExportProgressWrap" class="progress-bar-wrap">
+            <div id="videoExportProgressFill" class="progress-bar-fill"></div>
+          </div>
+
+          <div class="export-btn-row">
+            <button id="saveStickerVideoBtn" class="btn btn-primary" type="button">💾 Guardar en Galería</button>
+            <button id="shareStickerVideoBtn" class="btn btn-secondary" type="button">📲 Enviar directo a WhatsApp</button>
+          </div>
+          <button id="shareAudioDirectBtn" class="btn btn-secondary btn-sm" type="button">🔊 Enviar archivo de audio (.wav) directo a WhatsApp</button>
+
+          <div class="beta-steps-box">
+            <strong>Importar en WhatsApp Beta 2.26.47.10:</strong><br/>
+            1. Toca <strong>Guardar en Galería</strong> (crea el clip 512×512 con el audio incrustado adentro).<br/>
+            2. En WhatsApp abre un chat → pestaña <strong>Stickers → Crear</strong>.<br/>
+            3. Elige el archivo guardado: WhatsApp lo convierte en Sound Sticker oficial conservando su audio adentro.
+          </div>
+        </div>
+      </div>
+
+      <!-- GALERÍA LOCAL Y PAQUETE WHATSAPP -->
+      <div id="galleryPanel" class="card panel-view hidden-mobile" style="margin-top:16px;">
+        <div class="section-head">
+          <h2 class="section-title">🗂️ Mis Sound Stickers <span id="galleryCountBadge" class="brand-badge">0</span></h2>
+          <button id="selectAllPackBtn" class="btn btn-secondary btn-sm" type="button">☑️ Seleccionar todos</button>
+        </div>
+
+        <input id="searchGalleryInput" class="text-input" style="height:42px; font-size:0.86rem;" type="search" placeholder="Buscar Sound Sticker..." />
+
+        <div class="pack-builder-box">
+          <div class="pack-builder-head">
+            <span>📦 Exportar Paquete a WhatsApp</span>
+            <span id="packSelectedCount" class="step-badge">0 seleccionados (mín. 3)</span>
+          </div>
+          <input id="packNameInput" class="text-input" style="height:42px; font-size:0.86rem;" type="text" maxlength="36" value="Mis AudioStickers" placeholder="Nombre del paquete" />
+          <div class="export-btn-row">
+            <button id="addPackToWhatsAppBtn" class="btn btn-primary btn-sm" type="button">➕ Agregar Paquete a WhatsApp</button>
+            <button id="downloadWastickersBtn" class="btn btn-secondary btn-sm" type="button">📦 Descargar .wastickers</button>
+          </div>
+          <div style="font-size:0.76rem; color:var(--text-secondary);">
+            Selecciona al menos <strong>3 stickers</strong> de la lista para enviar el paquete completo directo a WhatsApp o exportarlo como <code>.wastickers</code>.
+          </div>
+        </div>
+
+        <div id="galleryGrid" class="gallery-grid"></div>
+      </div>
+    </section>
+  </main>
+
+  <!-- MODAL GUÍA -->
+  <div id="guideModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="guideTitle">
+    <div class="modal-sheet">
+      <div class="modal-head">
+        <h3 id="guideTitle">📖 Sound Stickers (WhatsApp Beta 2.26.47.10)</h3>
+        <button id="closeGuideBtn" class="icon-btn" type="button">✕</button>
+      </div>
+      <div class="guide-step">
+        <div class="step-num">1</div>
+        <div><strong>Un solo contenedor con audio adentro:</strong> Esta app combina tu imagen 512×512 (o video) + audio en un único archivo multimedia para que no queden separados.</div>
+      </div>
+      <div class="guide-step">
+        <div class="step-num">2</div>
+        <div><strong>Simulador fiel:</strong> En el chat el sticker aparece con `🔇`; al tocarlo rebota y reproduce su audio integrado hasta 3 veces antes de silenciarse.</div>
+      </div>
+      <div class="guide-step">
+        <div class="step-num">3</div>
+        <div><strong>Cómo meterlo en WhatsApp Beta 2.26.47.10:</strong> Pulsa <em>Guardar en Galería</em>, luego entra a WhatsApp → <strong>Stickers → Crear</strong> y selecciona el archivo creado. WhatsApp lo convierte al instante en Sound Sticker con el sonido incrustado.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL RENOMBRAR -->
+  <div id="renameModal" class="modal-backdrop" role="dialog" aria-modal="true">
+    <div class="modal-sheet">
+      <div class="modal-head">
+        <h3>✏️ Renombrar Sound Sticker</h3>
+        <button id="closeRenameBtn" class="icon-btn" type="button">✕</button>
+      </div>
+      <input id="renameInput" class="text-input" type="text" maxlength="44" placeholder="Nuevo nombre" />
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:14px;">
+        <button id="cancelRenameBtn" class="btn btn-secondary" type="button">Cancelar</button>
+        <button id="confirmRenameBtn" class="btn btn-primary" type="button">Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL ELIMINAR -->
+  <div id="deleteModal" class="modal-backdrop" role="dialog" aria-modal="true">
+    <div class="modal-sheet">
+      <div class="modal-head">
+        <h3>🗑️ Eliminar Sound Sticker</h3>
+        <button id="closeDeleteBtn" class="icon-btn" type="button">✕</button>
+      </div>
+      <p id="deleteMsg" style="margin:0 0 16px; color:var(--text-secondary); font-size:0.9rem;">¿Seguro que deseas eliminarlo de tu galería?</p>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+        <button id="cancelDeleteBtn" class="btn btn-secondary" type="button">Cancelar</button>
+        <button id="confirmDeleteBtn" class="btn btn-danger" type="button">Sí, eliminar</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    (() => {
+      'use strict';
+
+      const DB_NAME = 'AudioStickersSoundDB';
+      const DB_VERSION = 1;
+      const STORE_NAME = 'sound_stickers';
+      const THEME_KEY = 'audiostickers_theme';
+      const MAX_CLIP_SEC = 10;
+      const MIN_CLIP_SEC = 0.3;
+      const STICKER_EMOJIS = ['😂', '🔥', '💀', '👏', '🎉', '😎', '🤯', '😭', '❤️', '🚀', '🗣️', '🔊'];
+
+      const SFX_LIST = [
+        { id: 'applause', icon: '👏', name: 'Aplausos', dur: 2.2 },
+        { id: 'badumtss', icon: '🥁', name: 'Ba-dum-tss', dur: 1.5 },
+        { id: 'suspense', icon: '😱', name: 'Suspenso', dur: 2.4 },
+        { id: 'bell', icon: '🔔', name: 'Campana', dur: 1.6 },
+        { id: 'error', icon: '❌', name: 'Error', dur: 1.0 },
+        { id: 'fanfare', icon: '🎉', name: 'Fanfarria', dur: 1.9 },
+        { id: 'boom', icon: '💥', name: 'Impacto', dur: 1.3 },
+        { id: 'pop', icon: '✨', name: 'Pop', dur: 0.6 },
+      ];
+
+      const state = {
+        activeTab: 'create',
+        visualMode: 'emoji',
+        visualEmoji: '😂',
+        visualShape: 'rounded',
+        visualZoom: 1,
+        panX: 0,
+        panY: 0,
+        isDraggingCrop: false,
+        dragLastX: 0,
+        dragLastY: 0,
+        loadedImage: null,
+        loadedVideoEl: null,
+        loadedVideoFile: null,
+        simVideoRaf: null,
+
+        audioMode: 'mic',
+        maxRecordSec: 8,
+        isRecording: false,
+        mediaRecorder: null,
+        mediaStream: null,
+        recordedChunks: [],
+        recordStartMs: 0,
+        recordTimerId: null,
+        meterRafId: null,
+        analyser: null,
+
+        audioCtx: null,
+        audioBuffer: null,
+        waveformPeaks: [],
+        trimStart: 0,
+        trimEnd: 0,
+        draggingHandle: null,
+
+        previewSource: null,
+        previewRafId: null,
+        previewStartTime: 0,
+        isPreviewPlaying: false,
+
+        simPlaying: false,
+        simLoopCount: 0,
+        simMaxLoops: 3,
+        simSource: null,
+
+        gallery: [],
+        galleryObjectUrls: [],
+        editingStickerId: null,
+        selectedPackIds: new Set(),
+        activeGalAudio: null,
+        activeGalId: null,
+        activeGalLoop: 0,
+        renameId: null,
+        deleteId: null,
+      };
+
+      const $ = (id) => document.getElementById(id);
+      const tabCreateBtn = $('tabCreateBtn');
+      const tabGalleryBtn = $('tabGalleryBtn');
+      const createPanel = $('createPanel');
+      const galleryPanel = $('galleryPanel');
+      const galleryCountTab = $('galleryCountTab');
+      const galleryCountBadge = $('galleryCountBadge');
+      const themeToggleBtn = $('themeToggleBtn');
+      const themeIcon = $('themeIcon');
+      const guideHeaderBtn = $('guideHeaderBtn');
+
+      const pickImageBtn = $('pickImageBtn');
+      const pickVideoBtn = $('pickVideoBtn');
+      const useEmojiVisualBtn = $('useEmojiVisualBtn');
+      const imageFileInput = $('imageFileInput');
+      const videoFileInput = $('videoFileInput');
+      const cropStageWrap = $('cropStageWrap');
+      const visualCanvas = $('visualCanvas');
+      const visualTypeBadge = $('visualTypeBadge');
+      const visualZoomSlider = $('visualZoomSlider');
+      const zoomLabel = $('zoomLabel');
+      const zoomRow = $('zoomRow');
+      const emojiVisualPicker = $('emojiVisualPicker');
+      const videoAudioBox = $('videoAudioBox');
+      const videoInfoLabel = $('videoInfoLabel');
+      const extractVideoAudioBtn = $('extractVideoAudioBtn');
+
+      const recorderStage = $('recorderStage');
+      const recordStatusText = $('recordStatusText');
+      const recordBtn = $('recordBtn');
+      const micSvg = $('micSvg');
+      const stopSvg = $('stopSvg');
+      const timerDisplay = $('timerDisplay');
+      const levelBarsEl = $('levelBars');
+      const micAlertBox = $('micAlertBox');
+      const micAlertTitle = $('micAlertTitle');
+      const micAlertBody = $('micAlertBody');
+      const retryMicBtn = $('retryMicBtn');
+      const switchToSfxBtn = $('switchToSfxBtn');
+
+      const uploadAudioZone = $('uploadAudioZone');
+      const audioFileInput = $('audioFileInput');
+      const sfxGrid = $('sfxGrid');
+
+      const trimmerPanel = $('trimmerPanel');
+      const audioSourceLabel = $('audioSourceLabel');
+      const audioTotalLabel = $('audioTotalLabel');
+      const waveformCanvas = $('waveformCanvas');
+      const trimStartSlider = $('trimStartSlider');
+      const trimEndSlider = $('trimEndSlider');
+      const trimStartLabel = $('trimStartLabel');
+      const trimEndLabel = $('trimEndLabel');
+      const trimDurationLabel = $('trimDurationLabel');
+      const previewAudioBtn = $('previewAudioBtn');
+
+      const soundStickerTrigger = $('soundStickerTrigger');
+      const simCanvas = $('simCanvas');
+      const speakerCornerBadge = $('speakerCornerBadge');
+      const speakerIcon = $('speakerIcon');
+      const loopCounterBadge = $('loopCounterBadge');
+      const simDurationText = $('simDurationText');
+      const simStatusBar = $('simStatusBar');
+
+      const editingBanner = $('editingBanner');
+      const editingBannerText = $('editingBannerText');
+      const cancelEditBtn = $('cancelEditBtn');
+      const stickerNameInput = $('stickerNameInput');
+      const saveToGalleryBtn = $('saveToGalleryBtn');
+      const saveStickerVideoBtn = $('saveStickerVideoBtn');
+      const shareStickerVideoBtn = $('shareStickerVideoBtn');
+      const shareAudioDirectBtn = $('shareAudioDirectBtn');
+      const videoExportProgressWrap = $('videoExportProgressWrap');
+      const videoExportProgressFill = $('videoExportProgressFill');
+
+      const searchGalleryInput = $('searchGalleryInput');
+      const galleryGrid = $('galleryGrid');
+      const selectAllPackBtn = $('selectAllPackBtn');
+      const packSelectedCount = $('packSelectedCount');
+      const packNameInput = $('packNameInput');
+      const addPackToWhatsAppBtn = $('addPackToWhatsAppBtn');
+      const downloadWastickersBtn = $('downloadWastickersBtn');
+
+      const guideModal = $('guideModal');
+      const closeGuideBtn = $('closeGuideBtn');
+      const renameModal = $('renameModal');
+      const renameInput = $('renameInput');
+      const closeRenameBtn = $('closeRenameBtn');
+      const cancelRenameBtn = $('cancelRenameBtn');
+      const confirmRenameBtn = $('confirmRenameBtn');
+      const deleteModal = $('deleteModal');
+      const deleteMsg = $('deleteMsg');
+      const closeDeleteBtn = $('closeDeleteBtn');
+      const cancelDeleteBtn = $('cancelDeleteBtn');
+      const confirmDeleteBtn = $('confirmDeleteBtn');
+      const toastEl = $('toast');
+
+      let toastTimer = null;
+      function showToast(msg) {
+        toastEl.textContent = msg;
+        toastEl.classList.add('show');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => toastEl.classList.remove('show'), 3000);
+      }
+
+      async function getAudioContext() {
+        if (!state.audioCtx) {
+          const Ctx = window.AudioContext || window.webkitAudioContext;
+          state.audioCtx = new Ctx();
+        }
+        if (state.audioCtx.state === 'suspended') {
+          await state.audioCtx.resume().catch(() => {});
+        }
+        return state.audioCtx;
+      }
+
+      function formatSec(sec, tenths = true) {
+        const s = Math.max(0, sec);
+        const mins = Math.floor(s / 60);
+        const rem = s % 60;
+        if (tenths) return `${String(mins).padStart(2, '0')}:${rem.toFixed(1).padStart(4, '0')}`;
+        return `${String(mins).padStart(2, '0')}:${String(Math.floor(rem)).padStart(2, '0')}`;
+      }
+
+      function applyTheme(theme) {
+        document.documentElement.setAttribute('data-theme', theme);
+        localStorage.setItem(THEME_KEY, theme);
+        themeIcon.textContent = theme === 'dark' ? '☀️' : '🌙';
+        if (state.audioBuffer) drawWaveform();
+      }
+
+      function switchTab(tab) {
+        state.activeTab = tab;
+        const isCreate = tab === 'create';
+        tabCreateBtn.classList.toggle('active', isCreate);
+        tabGalleryBtn.classList.toggle('active', !isCreate);
+        createPanel.classList.toggle('hidden-mobile', !isCreate);
+        galleryPanel.classList.toggle('hidden-mobile', isCreate);
+        if (isCreate && state.audioBuffer) requestAnimationFrame(() => drawWaveform());
+      }
+
+      // ---------- Visual 512x512 ----------
+      function initVisualEmojiPicker() {
+        emojiVisualPicker.innerHTML = '';
+        STICKER_EMOJIS.forEach((em) => {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = `emoji-chip${em === state.visualEmoji ? ' selected' : ''}`;
+          btn.textContent = em;
+          btn.addEventListener('click', () => {
+            state.visualEmoji = em;
+            setVisualMode('emoji');
+            emojiVisualPicker.querySelectorAll('.emoji-chip').forEach((c) => {
+              c.classList.toggle('selected', c.textContent === em);
+            });
+          });
+          emojiVisualPicker.appendChild(btn);
+        });
+      }
+
+      function setVisualMode(mode) {
+        state.visualMode = mode;
+        pickImageBtn.classList.toggle('active', mode === 'image');
+        pickVideoBtn.classList.toggle('active', mode === 'video');
+        useEmojiVisualBtn.classList.toggle('active', mode === 'emoji');
+        emojiVisualPicker.style.display = mode === 'emoji' ? 'flex' : 'none';
+        zoomRow.style.display = mode === 'emoji' ? 'none' : 'flex';
+        videoAudioBox.classList.toggle('show', mode === 'video' && !!state.loadedVideoFile);
+
+        if (mode === 'emoji') visualTypeBadge.textContent = '512×512 • Emoji';
+        if (mode === 'image') visualTypeBadge.textContent = '512×512 • Imagen 1:1';
+        if (mode === 'video') visualTypeBadge.textContent = '512×512 • Video 1:1';
+
+        renderVisualToCanvas(visualCanvas);
+        renderVisualToCanvas(simCanvas);
+      }
+
+      function applyShapeMask(ctx, size, shape) {
+        ctx.beginPath();
+        if (shape === 'circle') {
+          ctx.arc(size / 2, size / 2, size / 2 - 4, 0, Math.PI * 2);
+        } else if (shape === 'rounded') {
+          ctx.roundRect(0, 0, size, size, 64);
+        } else {
+          ctx.rect(0, 0, size, size);
+        }
+        ctx.closePath();
+        ctx.clip();
+      }
+
+      function drawCoverMedia(ctx, media, mediaW, mediaH, size) {
+        if (!mediaW || !mediaH) return;
+        const baseScale = Math.max(size / mediaW, size / mediaH);
+        const scale = baseScale * state.visualZoom;
+        const drawW = mediaW * scale;
+        const drawH = mediaH * scale;
+        const maxPanX = Math.max(0, (drawW - size) / 2);
+        const maxPanY = Math.max(0, (drawH - size) / 2);
+        state.panX = Math.max(-maxPanX, Math.min(maxPanX, state.panX));
+        state.panY = Math.max(-maxPanY, Math.min(maxPanY, state.panY));
+        ctx.drawImage(media, (size - drawW) / 2 + state.panX, (size - drawH) / 2 + state.panY, drawW, drawH);
+      }
+
+      function renderVisualToCanvas(targetCanvas) {
+        const size = 512;
+        const ctx = targetCanvas.getContext('2d');
+        ctx.clearRect(0, 0, size, size);
+        ctx.save();
+        applyShapeMask(ctx, size, state.visualShape);
+
+        if (state.visualMode === 'image' && state.loadedImage) {
+          drawCoverMedia(ctx, state.loadedImage, state.loadedImage.naturalWidth, state.loadedImage.naturalHeight, size);
+        } else if (state.visualMode === 'video' && state.loadedVideoEl && state.loadedVideoEl.readyState >= 2) {
+          drawCoverMedia(ctx, state.loadedVideoEl, state.loadedVideoEl.videoWidth, state.loadedVideoEl.videoHeight, size);
+        } else {
+          const grad = ctx.createLinearGradient(0, 0, size, size);
+          grad.addColorStop(0, '#1e3c36');
+          grad.addColorStop(1, '#0f2027');
+          ctx.fillStyle = grad;
+          ctx.fillRect(0, 0, size, size);
+          ctx.font = '270px "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(state.visualEmoji, size / 2, size / 2 + 16);
+        }
+        ctx.restore();
+
+        ctx.save();
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.22)';
+        ctx.lineWidth = 8;
+        ctx.beginPath();
+        if (state.visualShape === 'circle') ctx.arc(size / 2, size / 2, size / 2 - 4, 0, Math.PI * 2);
+        else if (state.visualShape === 'rounded') ctx.roundRect(4, 4, size - 8, size - 8, 60);
+        else ctx.rect(4, 4, size - 8, size - 8);
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      function canvasToWebpBlob(canvas) {
+        return new Promise((resolve) => {
+          canvas.toBlob(
+            (blob) => {
+              if (blob) resolve(blob);
+              else canvas.toBlob((pngBlob) => resolve(pngBlob), 'image/png');
+            },
+            'image/webp',
+            0.92
+          );
+        });
+      }
+
+      cropStageWrap.addEventListener('pointerdown', (e) => {
+        if (state.visualMode === 'emoji') return;
+        state.isDraggingCrop = true;
+        state.dragLastX = e.clientX;
+        state.dragLastY = e.clientY;
+        cropStageWrap.setPointerCapture(e.pointerId);
+      });
+
+      cropStageWrap.addEventListener('pointermove', (e) => {
+        if (!state.isDraggingCrop) return;
+        state.panX += (e.clientX - state.dragLastX) * 2.2;
+        state.panY += (e.clientY - state.dragLastY) * 2.2;
+        state.dragLastX = e.clientX;
+        state.dragLastY = e.clientY;
+        renderVisualToCanvas(visualCanvas);
+        renderVisualToCanvas(simCanvas);
+      });
+
+      cropStageWrap.addEventListener('pointerup', () => { state.isDraggingCrop = false; });
+      cropStageWrap.addEventListener('pointercancel', () => { state.isDraggingCrop = false; });
+
+      visualZoomSlider.addEventListener('input', () => {
+        state.visualZoom = Number(visualZoomSlider.value);
+        zoomLabel.textContent = `${state.visualZoom.toFixed(1)}x`;
+        renderVisualToCanvas(visualCanvas);
+        renderVisualToCanvas(simCanvas);
+      });
+
+      document.querySelectorAll('[data-shape]').forEach((chip) => {
+        chip.addEventListener('click', () => {
+          state.visualShape = chip.dataset.shape;
+          document.querySelectorAll('[data-shape]').forEach((c) => c.classList.toggle('active', c === chip));
+          renderVisualToCanvas(visualCanvas);
+          renderVisualToCanvas(simCanvas);
+        });
+      });
+
+      pickImageBtn.addEventListener('click', () => imageFileInput.click());
+      imageFileInput.addEventListener('change', (e) => {
+        const file = e.target.files && e.target.files[0];
+        e.target.value = '';
+        if (!file) return;
+        const url = URL.createObjectURL(file);
+        const img = new Image();
+        img.onload = () => {
+          URL.revokeObjectURL(url);
+          state.loadedImage = img;
+          state.panX = 0;
+          state.panY = 0;
+          state.visualZoom = 1;
+          visualZoomSlider.value = '1';
+          zoomLabel.textContent = '1.0x';
+          stopVideoPreviewLoop();
+          setVisualMode('image');
+          showToast('Imagen lista. Encuadra 1:1 y agrega tu audio.');
+        };
+        img.onerror = () => { URL.revokeObjectURL(url); showToast('No se pudo cargar esa imagen.'); };
+        img.src = url;
+      });
+
+      pickVideoBtn.addEventListener('click', () => videoFileInput.click());
+      videoFileInput.addEventListener('change', (e) => {
+        const file = e.target.files && e.target.files[0];
+        e.target.value = '';
+        if (!file) return;
+        stopVideoPreviewLoop();
+        if (state.loadedVideoEl && state.loadedVideoEl.src) URL.revokeObjectURL(state.loadedVideoEl.src);
+
+        const vid = document.createElement('video');
+        vid.muted = true;
+        vid.playsInline = true;
+        vid.loop = true;
+        vid.preload = 'auto';
+        const url = URL.createObjectURL(file);
+        vid.src = url;
+
+        vid.onloadeddata = () => {
+          state.loadedVideoEl = vid;
+          state.loadedVideoFile = file;
+          state.panX = 0;
+          state.panY = 0;
+          state.visualZoom = 1;
+          visualZoomSlider.value = '1';
+          zoomLabel.textContent = '1.0x';
+          videoInfoLabel.textContent = `🎬 ${file.name.slice(0, 22)} (${vid.duration.toFixed(1)}s)`;
+          setVisualMode('video');
+          vid.currentTime = 0;
+          renderVisualToCanvas(visualCanvas);
+          renderVisualToCanvas(simCanvas);
+          showToast('Video listo. Conserva su audio o pon uno nuevo.');
+        };
+        vid.onerror = () => { URL.revokeObjectURL(url); showToast('Formato de video no compatible.'); };
+      });
+
+      extractVideoAudioBtn.addEventListener('click', async () => {
+        if (!state.loadedVideoFile) return;
+        try {
+          await loadAudioBlob(state.loadedVideoFile, `Audio de ${state.loadedVideoFile.name}`);
+          switchAudioMode('file');
+        } catch (_) {
+          showToast('Este video no tiene pista de audio compatible. Graba voz o usa un efecto.');
+        }
+      });
+
+      useEmojiVisualBtn.addEventListener('click', () => {
+        stopVideoPreviewLoop();
+        setVisualMode('emoji');
+      });
+
+      function startVideoPreviewLoop() {
+        stopVideoPreviewLoop();
+        if (state.visualMode !== 'video' || !state.loadedVideoEl) return;
+        state.loadedVideoEl.currentTime = 0;
+        state.loadedVideoEl.play().catch(() => {});
+        const tick = () => {
+          if (!state.simPlaying && !state.isPreviewPlaying) return;
+          renderVisualToCanvas(visualCanvas);
+          renderVisualToCanvas(simCanvas);
+          state.simVideoRaf = requestAnimationFrame(tick);
+        };
+        state.simVideoRaf = requestAnimationFrame(tick);
+      }
+
+      function stopVideoPreviewLoop() {
+        cancelAnimationFrame(state.simVideoRaf);
+        if (state.loadedVideoEl) state.loadedVideoEl.pause();
+      }
+
+      // ---------- 3 Audio Modes ----------
+      function switchAudioMode(mode) {
+        state.audioMode = mode;
+        document.querySelectorAll('.mode-btn').forEach((b) => b.classList.toggle('active', b.dataset.mode === mode));
+        $('paneMic').classList.toggle('active', mode === 'mic');
+        $('paneFile').classList.toggle('active', mode === 'file');
+        $('paneSfx').classList.toggle('active', mode === 'sfx');
+      }
+
+      document.querySelectorAll('.mode-btn').forEach((btn) => btn.addEventListener('click', () => switchAudioMode(btn.dataset.mode)));
+
+      function initMicUI() {
+        levelBarsEl.innerHTML = '';
+        for (let i = 0; i < 22; i++) {
+          const b = document.createElement('div');
+          b.className = 'level-bar';
+          levelBarsEl.appendChild(b);
+        }
+        document.querySelectorAll('.limit-chip').forEach((chip) => {
+          chip.addEventListener('click', () => {
+            if (state.isRecording) return;
+            state.maxRecordSec = Number(chip.dataset.limit);
+            document.querySelectorAll('.limit-chip').forEach((c) => c.classList.toggle('active', c === chip));
+            timerDisplay.innerHTML = `00:00 <span>/ 00:${String(state.maxRecordSec).padStart(2, '0')}</span>`;
+          });
+        });
+      }
+
+      function pickAudioMime() {
+        if (typeof MediaRecorder === 'undefined') return '';
+        for (const t of ['audio/webm;codecs=opus', 'audio/webm', 'audio/ogg;codecs=opus', 'audio/mp4']) {
+          if (MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(t)) return t;
+        }
+        return '';
+      }
+
+      async function startRecording() {
+        micAlertBox.classList.remove('show');
+        stopSimulator();
+        stopPreview();
+
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+          micAlertTitle.textContent = 'Micrófono no disponible';
+          micAlertBody.textContent = 'Usa otro navegador o elige "Subir Audio" / "Efectos".';
+          micAlertBox.classList.add('show');
+          return;
+        }
+
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({
+            audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
+          });
+          state.mediaStream = stream;
+          state.recordedChunks = [];
+          const mime = pickAudioMime();
+          const rec = mime ? new MediaRecorder(stream, { mimeType: mime }) : new MediaRecorder(stream);
+          state.mediaRecorder = rec;
+
+          rec.ondataavailable = (e) => { if (e.data && e.data.size > 0) state.recordedChunks.push(e.data); };
+          rec.onstop = async () => {
+            cleanupMic();
+            const blob = new Blob(state.recordedChunks, { type: rec.mimeType || mime || 'audio/webm' });
+            resetRecorderUI();
+            if (blob.size > 200) await loadAudioBlob(blob, 'Grabación de voz');
+            else showToast('Grabación muy corta. Intenta de nuevo.');
+          };
+
+          try {
+            const ctx = await getAudioContext();
+            const analyser = ctx.createAnalyser();
+            analyser.fftSize = 64;
+            ctx.createMediaStreamSource(stream).connect(analyser);
+            state.analyser = analyser;
+            animateLevelBars();
+          } catch (_) {
+            state.analyser = null;
+          }
+
+          state.isRecording = true;
+          state.recordStartMs = performance.now();
+          rec.start(100);
+
+          recorderStage.classList.add('recording-active');
+          recordStatusText.textContent = 'Grabando... toca para detener';
+          micSvg.style.display = 'none';
+          stopSvg.style.display = 'block';
+
+          state.recordTimerId = setInterval(() => {
+            const elapsed = (performance.now() - state.recordStartMs) / 1000;
+            const shown = Math.min(elapsed, state.maxRecordSec);
+            timerDisplay.innerHTML = `${formatSec(shown, false)} <span>/ 00:${String(state.maxRecordSec).padStart(2, '0')}</span>`;
+            if (elapsed >= state.maxRecordSec) {
+              stopRecording();
+              showToast(`Grabación lista (${state.maxRecordSec}s)`);
+            }
+          }, 80);
+        } catch (err) {
+          cleanupMic();
+          resetRecorderUI();
+          const name = err && err.name ? err.name : '';
+          micAlertTitle.textContent = name === 'NotFoundError' ? 'No hay micrófono conectado' : 'Permiso de micrófono denegado';
+          micAlertBody.textContent = 'Activa el permiso del micrófono o usa "Subir Audio" o "Efectos".';
+          micAlertBox.classList.add('show');
+        }
+      }
+
+      function animateLevelBars() {
+        if (!state.isRecording || !state.analyser) return;
+        const data = new Uint8Array(state.analyser.frequencyBinCount);
+        state.analyser.getByteFrequencyData(data);
+        Array.from(levelBarsEl.children).forEach((bar, i) => {
+          const val = data[i % data.length] || 0;
+          bar.style.height = `${Math.max(6, Math.round((val / 255) * 28))}px`;
+        });
+        state.meterRafId = requestAnimationFrame(animateLevelBars);
+      }
+
+      function stopRecording() {
+        if (!state.isRecording) return;
+        state.isRecording = false;
+        clearInterval(state.recordTimerId);
+        cancelAnimationFrame(state.meterRafId);
+        if (state.mediaRecorder && state.mediaRecorder.state !== 'inactive') {
+          try { state.mediaRecorder.stop(); } catch (_) { cleanupMic(); resetRecorderUI(); }
+        }
+      }
+
+      function cleanupMic() {
+        if (state.mediaStream) {
+          state.mediaStream.getTracks().forEach((t) => t.stop());
+          state.mediaStream = null;
+        }
+      }
+
+      function resetRecorderUI() {
+        state.isRecording = false;
+        clearInterval(state.recordTimerId);
+        cancelAnimationFrame(state.meterRafId);
+        recorderStage.classList.remove('recording-active');
+        recordStatusText.textContent = 'Listo para grabar reacción';
+        micSvg.style.display = 'block';
+        stopSvg.style.display = 'none';
+        timerDisplay.innerHTML = `00:00 <span>/ 00:${String(state.maxRecordSec).padStart(2, '0')}</span>`;
+        Array.from(levelBarsEl.children).forEach((b) => { b.style.height = '6px'; });
+      }
+
+      recordBtn.addEventListener('click', () => (state.isRecording ? stopRecording() : startRecording()));
+      retryMicBtn.addEventListener('click', startRecording);
+      switchToSfxBtn.addEventListener('click', () => switchAudioMode('sfx'));
+
+      uploadAudioZone.addEventListener('click', () => audioFileInput.click());
+      uploadAudioZone.addEventListener('dragover', (e) => { e.preventDefault(); uploadAudioZone.classList.add('drag-over'); });
+      uploadAudioZone.addEventListener('dragleave', () => uploadAudioZone.classList.remove('drag-over'));
+      uploadAudioZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        uploadAudioZone.classList.remove('drag-over');
+        if (e.dataTransfer.files && e.dataTransfer.files[0]) loadAudioBlob(e.dataTransfer.files[0], e.dataTransfer.files[0].name);
+      });
+      audioFileInput.addEventListener('change', (e) => {
+        const f = e.target.files && e.target.files[0];
+        e.target.value = '';
+        if (f) loadAudioBlob(f, f.name);
+      });
+
+      function initSfxGrid() {
+        sfxGrid.innerHTML = '';
+        SFX_LIST.forEach((sfx) => {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'sfx-btn';
+          btn.innerHTML = `<span class="sfx-icon">${sfx.icon}</span><span>${sfx.name}</span>`;
+          btn.addEventListener('click', () => triggerSynthSfx(sfx, btn));
+          sfxGrid.appendChild(btn);
+        });
+      }
+
+      async function triggerSynthSfx(sfx, btnEl) {
+        sfxGrid.querySelectorAll('.sfx-btn').forEach((b) => b.classList.toggle('active', b === btnEl));
+        const sampleRate = 44100;
+        const offline = new OfflineAudioContext(1, Math.ceil(sampleRate * sfx.dur), sampleRate);
+
+        if (sfx.id === 'applause') {
+          const bufSize = Math.floor(sampleRate * sfx.dur);
+          const noiseBuf = offline.createBuffer(1, bufSize, sampleRate);
+          const out = noiseBuf.getChannelData(0);
+          for (let i = 0; i < bufSize; i++) out[i] = Math.random() * 2 - 1;
+          for (let burst = 0; burst < 16; burst++) {
+            const t = burst * 0.12 + Math.random() * 0.04;
+            const src = offline.createBufferSource();
+            src.buffer = noiseBuf;
+            const filter = offline.createBiquadFilter();
+            filter.type = 'bandpass';
+            filter.frequency.value = 1100 + Math.random() * 1400;
+            filter.Q.value = 1.4;
+            const gain = offline.createGain();
+            gain.gain.setValueAtTime(0.001, t);
+            gain.gain.exponentialRampToValueAtTime(0.32, t + 0.015);
+            gain.gain.exponentialRampToValueAtTime(0.001, t + 0.11);
+            src.connect(filter).connect(gain).connect(offline.destination);
+            src.start(t);
+            src.stop(t + 0.12);
+          }
+        } else if (sfx.id === 'badumtss') {
+          const osc1 = offline.createOscillator();
+          const g1 = offline.createGain();
+          osc1.frequency.setValueAtTime(160, 0.05);
+          osc1.frequency.exponentialRampToValueAtTime(55, 0.22);
+          g1.gain.setValueAtTime(0.7, 0.05);
+          g1.gain.exponentialRampToValueAtTime(0.001, 0.24);
+          osc1.connect(g1).connect(offline.destination);
+          osc1.start(0.05);
+          osc1.stop(0.25);
+
+          const noiseLen = Math.floor(sampleRate * 1.1);
+          const nBuf = offline.createBuffer(1, noiseLen, sampleRate);
+          const nd = nBuf.getChannelData(0);
+          for (let i = 0; i < noiseLen; i++) nd[i] = Math.random() * 2 - 1;
+
+          const sn = offline.createBufferSource();
+          sn.buffer = nBuf;
+          const sf = offline.createBiquadFilter();
+          sf.type = 'highpass';
+          sf.frequency.value = 1200;
+          const sg = offline.createGain();
+          sg.gain.setValueAtTime(0.55, 0.32);
+          sg.gain.exponentialRampToValueAtTime(0.001, 0.5);
+          sn.connect(sf).connect(sg).connect(offline.destination);
+          sn.start(0.32);
+          sn.stop(0.52);
+
+          const cr = offline.createBufferSource();
+          cr.buffer = nBuf;
+          const cf = offline.createBiquadFilter();
+          cf.type = 'highpass';
+          cf.frequency.value = 3400;
+          const cg = offline.createGain();
+          cg.gain.setValueAtTime(0.65, 0.58);
+          cg.gain.exponentialRampToValueAtTime(0.001, 1.45);
+          cr.connect(cf).connect(cg).connect(offline.destination);
+          cr.start(0.58);
+          cr.stop(1.48);
+        } else if (sfx.id === 'suspense') {
+          [110, 116.5, 220, 311].forEach((freq) => {
+            const osc = offline.createOscillator();
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(freq, 0);
+            osc.frequency.linearRampToValueAtTime(freq * 1.15, 2.3);
+            const f = offline.createBiquadFilter();
+            f.type = 'lowpass';
+            f.frequency.setValueAtTime(300, 0);
+            f.frequency.exponentialRampToValueAtTime(2200, 2.2);
+            const g = offline.createGain();
+            g.gain.setValueAtTime(0.01, 0);
+            g.gain.linearRampToValueAtTime(0.18, 1.8);
+            g.gain.exponentialRampToValueAtTime(0.001, 2.38);
+            osc.connect(f).connect(g).connect(offline.destination);
+            osc.start(0);
+            osc.stop(2.4);
+          });
+        } else if (sfx.id === 'bell') {
+          [880, 1760, 2637].forEach((freq, idx) => {
+            const osc = offline.createOscillator();
+            osc.type = 'sine';
+            osc.frequency.value = freq;
+            const g = offline.createGain();
+            g.gain.setValueAtTime(0.45 / (idx + 1), 0);
+            g.gain.exponentialRampToValueAtTime(0.001, 1.55 - idx * 0.25);
+            osc.connect(g).connect(offline.destination);
+            osc.start(0);
+            osc.stop(1.6);
+          });
+        } else if (sfx.id === 'error') {
+          const osc = offline.createOscillator();
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(320, 0);
+          osc.frequency.setValueAtTime(240, 0.22);
+          osc.frequency.linearRampToValueAtTime(140, 0.95);
+          const f = offline.createBiquadFilter();
+          f.type = 'lowpass';
+          f.frequency.value = 1100;
+          const g = offline.createGain();
+          g.gain.setValueAtTime(0.35, 0);
+          g.gain.exponentialRampToValueAtTime(0.001, 0.98);
+          osc.connect(f).connect(g).connect(offline.destination);
+          osc.start(0);
+          osc.stop(1.0);
+        } else if (sfx.id === 'fanfare') {
+          [
+            { f: 523.25, t: 0, d: 0.18 },
+            { f: 659.25, t: 0.18, d: 0.18 },
+            { f: 783.99, t: 0.36, d: 0.18 },
+            { f: 1046.5, t: 0.56, d: 1.2 },
+          ].forEach((n) => {
+            const osc = offline.createOscillator();
+            osc.type = 'triangle';
+            osc.frequency.value = n.f;
+            const g = offline.createGain();
+            g.gain.setValueAtTime(0.42, n.t);
+            g.gain.exponentialRampToValueAtTime(0.001, n.t + n.d);
+            osc.connect(g).connect(offline.destination);
+            osc.start(n.t);
+            osc.stop(n.t + n.d);
+          });
+        } else if (sfx.id === 'boom') {
+          const osc = offline.createOscillator();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(145, 0);
+          osc.frequency.exponentialRampToValueAtTime(36, 0.9);
+          const g = offline.createGain();
+          g.gain.setValueAtTime(0.9, 0);
+          g.gain.exponentialRampToValueAtTime(0.001, 1.25);
+          osc.connect(g).connect(offline.destination);
+          osc.start(0);
+          osc.stop(1.3);
+        } else {
+          const osc = offline.createOscillator();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(340, 0);
+          osc.frequency.exponentialRampToValueAtTime(1250, 0.14);
+          const g = offline.createGain();
+          g.gain.setValueAtTime(0.55, 0);
+          g.gain.exponentialRampToValueAtTime(0.001, 0.25);
+          osc.connect(g).connect(offline.destination);
+          osc.start(0);
+          osc.stop(0.3);
+        }
+
+        const rendered = await offline.startRendering();
+        setLoadedAudioBuffer(rendered, `Efecto: ${sfx.icon} ${sfx.name}`);
+        startPreview();
+      }
+
+      // ---------- Decoding & Trimmer ----------
+      async function loadAudioBlob(blob, label) {
+        const ctx = await getAudioContext();
+        const buf = await blob.arrayBuffer();
+        const decoded = await ctx.decodeAudioData(buf.slice(0));
+        if (!decoded || decoded.duration < 0.1) {
+          showToast('Audio muy corto o vacío.');
+          return;
+        }
+        setLoadedAudioBuffer(decoded, label);
+        showToast('Audio integrado. Pruébalo en el simulador o guárdalo en 1 archivo.');
+      }
+
+      function setLoadedAudioBuffer(buffer, label) {
+        stopPreview();
+        stopSimulator();
+        state.audioBuffer = buffer;
+        state.waveformPeaks = extractPeaks(buffer, 90);
+        state.trimStart = 0;
+        state.trimEnd = Math.min(buffer.duration, MAX_CLIP_SEC);
+
+        audioSourceLabel.textContent = label;
+        audioTotalLabel.textContent = `Total: ${buffer.duration.toFixed(1)} s`;
+
+        const dur = buffer.duration;
+        trimStartSlider.min = 0;
+        trimStartSlider.max = dur.toFixed(2);
+        trimStartSlider.step = 0.05;
+        trimEndSlider.min = 0;
+        trimEndSlider.max = dur.toFixed(2);
+        trimEndSlider.step = 0.05;
+
+        trimmerPanel.classList.add('visible');
+        syncTrimUI();
+      }
+
+      function extractPeaks(buffer, count) {
+        const ch0 = buffer.getChannelData(0);
+        const step = Math.max(1, Math.floor(ch0.length / count));
+        const peaks = [];
+        let maxP = 0.01;
+        for (let i = 0; i < count; i++) {
+          let p = 0;
+          const a = i * step;
+          const b = Math.min(ch0.length, a + step);
+          for (let j = a; j < b; j++) {
+            const v = Math.abs(ch0[j]);
+            if (v > p) p = v;
+          }
+          peaks.push(p);
+          if (p > maxP) maxP = p;
+        }
+        return peaks.map((p) => Math.max(0.08, p / maxP));
+      }
+
+      function syncTrimUI() {
+        if (!state.audioBuffer) return;
+        const dur = state.audioBuffer.duration;
+        const minGap = Math.min(MIN_CLIP_SEC, dur);
+
+        state.trimStart = Math.max(0, Math.min(state.trimStart, dur - minGap));
+        state.trimEnd = Math.min(dur, Math.max(state.trimEnd, state.trimStart + minGap));
+        if (state.trimEnd - state.trimStart > MAX_CLIP_SEC) {
+          state.trimEnd = Math.min(dur, state.trimStart + MAX_CLIP_SEC);
+        }
+
+        trimStartSlider.value = state.trimStart.toFixed(2);
+        trimEndSlider.value = state.trimEnd.toFixed(2);
+        trimStartLabel.textContent = formatSec(state.trimStart, true);
+        trimEndLabel.textContent = formatSec(state.trimEnd, true);
+
+        const clipLen = state.trimEnd - state.trimStart;
+        trimDurationLabel.textContent = `${clipLen.toFixed(1)} s`;
+        simDurationText.textContent = `${clipLen.toFixed(1)} s`;
+
+        requestAnimationFrame(() => drawWaveform());
+      }
+
+      function drawWaveform(playheadSec = null) {
+        if (!state.audioBuffer) return;
+        const rect = waveformCanvas.getBoundingClientRect();
+        if (!rect.width || !rect.height) return;
+
+        const dpr = window.devicePixelRatio || 1;
+        const w = Math.round(rect.width * dpr);
+        const h = Math.round(rect.height * dpr);
+        if (waveformCanvas.width !== w || waveformCanvas.height !== h) {
+          waveformCanvas.width = w;
+          waveformCanvas.height = h;
+        }
+
+        const ctx = waveformCanvas.getContext('2d');
+        ctx.save();
+        ctx.scale(dpr, dpr);
+        const cw = rect.width;
+        const ch = rect.height;
+        const dur = state.audioBuffer.duration;
+        const sx = (state.trimStart / dur) * cw;
+        const ex = (state.trimEnd / dur) * cw;
+
+        const styles = getComputedStyle(document.documentElement);
+        const accent = styles.getPropertyValue('--accent-bright').trim() || '#25d366';
+        const muted = styles.getPropertyValue('--border').trim() || '#2f3e46';
+
+        ctx.clearRect(0, 0, cw, ch);
+        ctx.fillStyle = 'rgba(37, 211, 102, 0.12)';
+        ctx.fillRect(sx, 6, Math.max(2, ex - sx), ch - 12);
+
+        const peaks = state.waveformPeaks;
+        const gap = cw / peaks.length;
+        const bw = Math.max(2, gap * 0.62);
+        for (let i = 0; i < peaks.length; i++) {
+          const x = i * gap + (gap - bw) / 2;
+          const cx = x + bw / 2;
+          const bh = Math.max(4, peaks[i] * (ch - 22));
+          ctx.fillStyle = cx >= sx && cx <= ex ? accent : muted;
+          ctx.beginPath();
+          ctx.roundRect(x, ch / 2 - bh / 2, bw, bh, 3);
+          ctx.fill();
+        }
+
+        [sx, ex].forEach((hx) => {
+          const cx = Math.max(5, Math.min(cw - 5, hx));
+          ctx.strokeStyle = accent;
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.moveTo(cx, 6);
+          ctx.lineTo(cx, ch - 6);
+          ctx.stroke();
+          ctx.fillStyle = accent;
+          ctx.beginPath();
+          ctx.arc(cx, 10, 5.5, 0, Math.PI * 2);
+          ctx.arc(cx, ch - 10, 5.5, 0, Math.PI * 2);
+          ctx.fill();
+        });
+
+        if (playheadSec !== null && playheadSec >= state.trimStart && playheadSec <= state.trimEnd) {
+          const px = (playheadSec / dur) * cw;
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(px, 6);
+          ctx.lineTo(px, ch - 6);
+          ctx.stroke();
+        }
+        ctx.restore();
+      }
+
+      waveformCanvas.addEventListener('pointerdown', (e) => {
+        if (!state.audioBuffer) return;
+        const rect = waveformCanvas.getBoundingClientRect();
+        const dur = state.audioBuffer.duration;
+        const sx = (state.trimStart / dur) * rect.width;
+        const ex = (state.trimEnd / dur) * rect.width;
+        const lx = e.clientX - rect.left;
+        state.draggingHandle = Math.abs(lx - sx) <= Math.abs(lx - ex) ? 'start' : 'end';
+        waveformCanvas.setPointerCapture(e.pointerId);
+        updateTrimPointer(e.clientX);
+      });
+
+      waveformCanvas.addEventListener('pointermove', (e) => { if (state.draggingHandle) updateTrimPointer(e.clientX); });
+      waveformCanvas.addEventListener('pointerup', () => { state.draggingHandle = null; });
+      waveformCanvas.addEventListener('pointercancel', () => { state.draggingHandle = null; });
+
+      function updateTrimPointer(clientX) {
+        const rect = waveformCanvas.getBoundingClientRect();
+        const t = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width)) * state.audioBuffer.duration;
+        const minGap = Math.min(MIN_CLIP_SEC, state.audioBuffer.duration);
+        if (state.draggingHandle === 'start') state.trimStart = Math.min(t, state.trimEnd - minGap);
+        else state.trimEnd = Math.max(t, state.trimStart + minGap);
+        syncTrimUI();
+      }
+
+      trimStartSlider.addEventListener('input', () => {
+        if (!state.audioBuffer) return;
+        const minGap = Math.min(MIN_CLIP_SEC, state.audioBuffer.duration);
+        state.trimStart = Math.min(Number(trimStartSlider.value), state.trimEnd - minGap);
+        syncTrimUI();
+      });
+
+      trimEndSlider.addEventListener('input', () => {
+        if (!state.audioBuffer) return;
+        const minGap = Math.min(MIN_CLIP_SEC, state.audioBuffer.duration);
+        state.trimEnd = Math.max(Number(trimEndSlider.value), state.trimStart + minGap);
+        syncTrimUI();
+      });
+
+      document.querySelectorAll('.nudge-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          if (!state.audioBuffer) return;
+          const d = Number(btn.dataset.delta);
+          if (btn.dataset.target === 'start') state.trimStart += d;
+          else state.trimEnd += d;
+          syncTrimUI();
+        });
+      });
+
+      async function startPreview() {
+        if (!state.audioBuffer) return;
+        stopSimulator();
+        stopPreview();
+        const ctx = await getAudioContext();
+        const dur = Math.max(0.1, state.trimEnd - state.trimStart);
+        const src = ctx.createBufferSource();
+        src.buffer = state.audioBuffer;
+        src.connect(ctx.destination);
+        state.previewSource = src;
+        state.isPreviewPlaying = true;
+        state.previewStartTime = ctx.currentTime;
+        previewAudioBtn.textContent = '⏹️ Detener';
+        src.onended = () => { if (state.previewSource === src) stopPreview(); };
+        src.start(0, state.trimStart, dur);
+
+        const tick = () => {
+          if (!state.isPreviewPlaying) return;
+          const cur = state.trimStart + (ctx.currentTime - state.previewStartTime);
+          if (cur >= state.trimEnd) { stopPreview(); return; }
+          drawWaveform(cur);
+          state.previewRafId = requestAnimationFrame(tick);
+        };
+        state.previewRafId = requestAnimationFrame(tick);
+      }
+
+      function stopPreview() {
+        cancelAnimationFrame(state.previewRafId);
+        if (state.previewSource) {
+          try { state.previewSource.stop(); } catch (_) {}
+          state.previewSource.disconnect();
+          state.previewSource = null;
+        }
+        state.isPreviewPlaying = false;
+        previewAudioBtn.textContent = '▶️ Escuchar';
+        if (state.audioBuffer) drawWaveform(null);
+      }
+
+      previewAudioBtn.addEventListener('click', () => (state.isPreviewPlaying ? stopPreview() : startPreview()));
+
+      // ---------- Simulador WhatsApp (3x loop) ----------
+      function triggerBounceAnimation(el) {
+        el.classList.remove('bouncing');
+        void el.offsetWidth;
+        el.classList.add('bouncing');
+      }
+
+      soundStickerTrigger.addEventListener('click', () => {
+        if (!state.audioBuffer) {
+          showToast('Agrega un audio en el paso 2 para probar el Sound Sticker.');
+          return;
+        }
+        if (state.simPlaying) stopSimulator();
+        else startSimulatorLoop();
+      });
+
+      function startSimulatorLoop() {
+        stopPreview();
+        stopGalleryPlayback();
+        state.simPlaying = true;
+        state.simLoopCount = 0;
+        startVideoPreviewLoop();
+        playNextSimCycle();
+      }
+
+      async function playNextSimCycle() {
+        if (!state.simPlaying || !state.audioBuffer) return;
+        state.simLoopCount += 1;
+        if (state.simLoopCount > state.simMaxLoops) { stopSimulator(); return; }
+
+        triggerBounceAnimation(soundStickerTrigger);
+        speakerCornerBadge.classList.add('active');
+        speakerIcon.textContent = '🔊';
+        loopCounterBadge.style.display = 'inline';
+        loopCounterBadge.textContent = `${state.simLoopCount}/${state.simMaxLoops}`;
+        simStatusBar.classList.add('playing');
+        simStatusBar.textContent = `🔊 Reproduciendo audio integrado (${state.simLoopCount} de ${state.simMaxLoops})`;
+
+        const ctx = await getAudioContext();
+        const dur = Math.max(0.15, state.trimEnd - state.trimStart);
+        const src = ctx.createBufferSource();
+        src.buffer = state.audioBuffer;
+        src.connect(ctx.destination);
+        state.simSource = src;
+
+        src.onended = () => {
+          if (state.simSource === src && state.simPlaying) {
+            if (state.simLoopCount < state.simMaxLoops) playNextSimCycle();
+            else stopSimulator();
+          }
+        };
+        src.start(0, state.trimStart, dur);
+      }
+
+      function stopSimulator() {
+        state.simPlaying = false;
+        state.simLoopCount = 0;
+        if (state.simSource) {
+          try { state.simSource.stop(); } catch (_) {}
+          state.simSource.disconnect();
+          state.simSource = null;
+        }
+        stopVideoPreviewLoop();
+        speakerCornerBadge.classList.remove('active');
+        speakerIcon.textContent = '🔇';
+        loopCounterBadge.style.display = 'none';
+        simStatusBar.classList.remove('playing');
+        simStatusBar.textContent = '🔇 Silenciado por defecto — Toca el sticker para oír su audio (máx. 3x)';
+      }
+
+      // ---------- WAV Helper (for IndexedDB storage only) ----------
+      function encodeTrimmedWav(buffer, startSec, endSec) {
+        const sr = buffer.sampleRate;
+        const s0 = Math.max(0, Math.floor(startSec * sr));
+        const s1 = Math.min(buffer.length, Math.ceil(endSec * sr));
+        const frames = Math.max(1, s1 - s0);
+        const chs = buffer.numberOfChannels;
+        const dataSize = frames * 2;
+        const ab = new ArrayBuffer(44 + dataSize);
+        const view = new DataView(ab);
+        const wstr = (off, str) => { for (let i = 0; i < str.length; i++) view.setUint8(off + i, str.charCodeAt(i)); };
+
+        wstr(0, 'RIFF');
+        view.setUint32(4, 36 + dataSize, true);
+        wstr(8, 'WAVE');
+        wstr(12, 'fmt ');
+        view.setUint32(16, 16, true);
+        view.setUint16(20, 1, true);
+        view.setUint16(22, 1, true);
+        view.setUint32(24, sr, true);
+        view.setUint32(28, sr * 2, true);
+        view.setUint16(32, 2, true);
+        view.setUint16(34, 16, true);
+        wstr(36, 'data');
+        view.setUint32(40, dataSize, true);
+
+        const arrays = [];
+        for (let c = 0; c < chs; c++) arrays.push(buffer.getChannelData(c));
+        let off = 44;
+        for (let i = 0; i < frames; i++) {
+          let sum = 0;
+          for (let c = 0; c < chs; c++) sum += arrays[c][s0 + i];
+          const v = Math.max(-1, Math.min(1, sum / chs));
+          view.setInt16(off, v < 0 ? v * 0x8000 : v * 0x7fff, true);
+          off += 2;
+        }
+        return new Blob([ab], { type: 'audio/wav' });
+      }
+
+      // ---------- Unified Single-File Video-Sticker Muxing (Visual + Audio inside 1 file) ----------
+      function pickUnifiedStickerMime() {
+        const candidates = [
+          'video/mp4;codecs=avc1.42E01E,mp4a.40.2',
+          'video/mp4;codecs=avc1,mp4a',
+          'video/mp4',
+          'video/webm;codecs=vp9,opus',
+          'video/webm;codecs=vp8,opus',
+          'video/webm',
+        ];
+        for (const t of candidates) {
+          if (typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported(t)) return t;
+        }
+        return '';
+      }
+
+      async function generateUnifiedStickerBlob() {
+        if (!state.audioBuffer) {
+          showToast('Agrega primero un audio para incrustarlo dentro del sticker.');
+          return null;
+        }
+        const mime = pickUnifiedStickerMime();
+        if (!mime || !visualCanvas.captureStream) {
+          showToast('Este navegador no soporta empaquetar video+audio en un solo archivo.');
+          return null;
+        }
+
+        stopSimulator();
+        stopPreview();
+
+        const exportCanvas = document.createElement('canvas');
+        exportCanvas.width = 512;
+        exportCanvas.height = 512;
+
+        const ctx = await getAudioContext();
+        const dest = ctx.createMediaStreamDestination();
+        const dur = Math.max(0.3, state.trimEnd - state.trimStart);
+
+        const audioSrc = ctx.createBufferSource();
+        audioSrc.buffer = state.audioBuffer;
+        audioSrc.connect(dest);
+
+        const videoStream = exportCanvas.captureStream(30);
+        const combinedStream = new MediaStream([
+          ...videoStream.getVideoTracks(),
+          ...dest.stream.getAudioTracks(),
+        ]);
+
+        const chunks = [];
+        let recorder;
+        try {
+          recorder = new MediaRecorder(combinedStream, {
+            mimeType: mime,
+            videoBitsPerSecond: 1500000,
+            audioBitsPerSecond: 128000,
+          });
+        } catch (_) {
+          recorder = new MediaRecorder(combinedStream, { mimeType: mime });
+        }
+
+        recorder.ondataavailable = (e) => { if (e.data && e.data.size > 0) chunks.push(e.data); };
+
+        if (state.visualMode === 'video' && state.loadedVideoEl) {
+          state.loadedVideoEl.currentTime = 0;
+          state.loadedVideoEl.play().catch(() => {});
+        }
+
+        videoExportProgressWrap.classList.add('show');
+        videoExportProgressFill.style.width = '0%';
+        saveStickerVideoBtn.disabled = true;
+        shareStickerVideoBtn.disabled = true;
+
+        return new Promise((resolve) => {
+          const startTime = performance.now();
+          let rafId = null;
+
+          const drawFrame = () => {
+            renderVisualToCanvas(exportCanvas);
+            const elapsed = (performance.now() - startTime) / 1000;
+            videoExportProgressFill.style.width = `${Math.min(100, (elapsed / dur) * 100)}%`;
+            if (elapsed < dur) rafId = requestAnimationFrame(drawFrame);
+          };
+
+          recorder.onstop = () => {
+            cancelAnimationFrame(rafId);
+            if (state.visualMode === 'video' && state.loadedVideoEl) state.loadedVideoEl.pause();
+            combinedStream.getTracks().forEach((t) => t.stop());
+            videoExportProgressWrap.classList.remove('show');
+            saveStickerVideoBtn.disabled = false;
+            shareStickerVideoBtn.disabled = false;
+            const ext = mime.includes('mp4') ? 'mp4' : 'webm';
+            resolve({ blob: new Blob(chunks, { type: mime }), ext, mime });
+          };
+
+          renderVisualToCanvas(exportCanvas);
+          recorder.start(100);
+          audioSrc.start(0, state.trimStart, dur);
+          rafId = requestAnimationFrame(drawFrame);
+
+          setTimeout(() => {
+            try { audioSrc.stop(); } catch (_) {}
+            if (recorder.state !== 'inactive') recorder.stop();
+          }, dur * 1000 + 140);
+        });
+      }
+
+      function safeBaseName() {
+        const raw = stickerNameInput.value.trim() || 'SoundSticker';
+        return raw.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-zA-Z0-9_-]+/g, '_') || 'SoundSticker';
+      }
+
+      function blobToBase64(blob) {
+        return new Promise((resolve, reject) => {
+          const r = new FileReader();
+          r.onloadend = () => {
+            const s = String(r.result || '');
+            resolve(s.includes(',') ? s.split(',')[1] : s);
+          };
+          r.onerror = reject;
+          r.readAsDataURL(blob);
+        });
+      }
+
+      async function shareBlobDirectToWhatsApp(blob, fileName, mimeType, title) {
+        if (window.AndroidBridge && typeof window.AndroidBridge.shareToWhatsAppDirect === 'function') {
+          const b64 = await blobToBase64(blob);
+          window.AndroidBridge.shareToWhatsAppDirect(b64, fileName, mimeType, title || fileName);
+          return true;
+        }
+        if (window.AndroidBridge && typeof window.AndroidBridge.shareFile === 'function') {
+          const b64 = await blobToBase64(blob);
+          window.AndroidBridge.shareFile(b64, fileName, mimeType, title || fileName);
+          return true;
+        }
+        if (navigator.share) {
+          const file = new File([blob], fileName, { type: mimeType });
+          if (!navigator.canShare || navigator.canShare({ files: [file] })) {
+            try {
+              await navigator.share({ title: title || fileName, files: [file] });
+              showToast('Compartido correctamente');
+              return true;
+            } catch (err) {
+              if (err && err.name === 'AbortError') return true;
+            }
+          }
+        }
+        return false;
+      }
+
+      async function exportUnifiedSticker(preferShare) {
+        const res = await generateUnifiedStickerBlob();
+        if (!res) return;
+        const fileName = `${safeBaseName()}.${res.ext}`;
+
+        if (preferShare) {
+          const shared = await shareBlobDirectToWhatsApp(res.blob, fileName, res.mime, stickerNameInput.value.trim() || fileName);
+          if (shared) return;
+        }
+        if (!preferShare && window.AndroidBridge && typeof window.AndroidBridge.saveFile === 'function') {
+          const b64 = await blobToBase64(res.blob);
+          window.AndroidBridge.saveFile(b64, fileName, res.mime);
+          return;
+        }
+
+        const url = URL.createObjectURL(res.blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1500);
+        showToast(`Sticker único guardado (${fileName}) — Impórtalo en WhatsApp Beta > Crear`);
+      }
+
+      saveStickerVideoBtn.addEventListener('click', () => exportUnifiedSticker(false));
+      shareStickerVideoBtn.addEventListener('click', () => exportUnifiedSticker(true));
+      shareAudioDirectBtn.addEventListener('click', async () => {
+        if (!state.audioBuffer) {
+          showToast('Graba o selecciona un audio antes de enviarlo a WhatsApp.');
+          return;
+        }
+        const wavBlob = encodeTrimmedWav(state.audioBuffer, state.trimStart, state.trimEnd);
+        const fileName = `${safeBaseName()}.wav`;
+        const shared = await shareBlobDirectToWhatsApp(wavBlob, fileName, 'audio/wav', stickerNameInput.value.trim() || fileName);
+        if (!shared) {
+          const url = URL.createObjectURL(wavBlob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = fileName;
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          setTimeout(() => URL.revokeObjectURL(url), 1500);
+          showToast(`Audio descargado (${fileName}) para compartir en WhatsApp`);
+        }
+      });
+
+      // ---------- Room (AndroidBridge) + IndexedDB Fallback Gallery ----------
+      const roomAudioCache = new Map();
+      const pendingAudioRequests = new Map();
+
+      function isAndroidRoomAvailable() {
+        return Boolean(
+          window.AndroidBridge &&
+          typeof window.AndroidBridge.saveRoomSticker === 'function' &&
+          typeof window.AndroidBridge.requestRoomStickers === 'function'
+        );
+      }
+
+      function base64ToBlob(b64, mime) {
+        if (!b64) return new Blob([], { type: mime });
+        const bin = atob(b64);
+        const bytes = new Uint8Array(bin.length);
+        for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+        return new Blob([bytes], { type: mime });
+      }
+
+      function setEditingSticker(id, title) {
+        state.editingStickerId = id || null;
+        if (state.editingStickerId) {
+          editingBanner.style.display = 'flex';
+          editingBannerText.textContent = `✏️ Editando: ${title || 'Sound Sticker'}`;
+          saveToGalleryBtn.textContent = '💾 Actualizar Sticker en Galería';
+        } else {
+          editingBanner.style.display = 'none';
+          saveToGalleryBtn.textContent = '🗂️ Guardar en Galería de la App';
+        }
+      }
+
+      cancelEditBtn.addEventListener('click', () => {
+        setEditingSticker(null);
+        stickerNameInput.value = '';
+        showToast('Modo creación de nuevo sticker');
+      });
+
+      function fetchRoomAudioBlob(id) {
+        if (roomAudioCache.has(id)) return Promise.resolve(roomAudioCache.get(id));
+        if (!isAndroidRoomAvailable() || typeof window.AndroidBridge.requestRoomStickerAudio !== 'function') {
+          return Promise.resolve(null);
+        }
+        return new Promise((resolve) => {
+          const reqId = `aud_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+          const timeoutId = setTimeout(() => {
+            pendingAudioRequests.delete(reqId);
+            resolve(null);
+          }, 8000);
+          pendingAudioRequests.set(reqId, (b64) => {
+            clearTimeout(timeoutId);
+            const blob = b64 ? base64ToBlob(b64, 'audio/wav') : null;
+            if (blob) roomAudioCache.set(id, blob);
+            resolve(blob);
+          });
+          window.AndroidBridge.requestRoomStickerAudio(id, reqId);
+        });
+      }
+
+      async function ensureItemAudioBlob(item) {
+        if (item.audioBlob) return item.audioBlob;
+        const fetched = await fetchRoomAudioBlob(item.id);
+        if (fetched) item.audioBlob = fetched;
+        return fetched;
+      }
+
+      function applyGalleryList(list) {
+        state.gallery = list;
+        galleryCountTab.textContent = String(state.gallery.length);
+        galleryCountBadge.textContent = String(state.gallery.length);
+        const validIds = new Set(state.gallery.map((g) => g.id));
+        state.selectedPackIds.forEach((id) => { if (!validIds.has(id)) state.selectedPackIds.delete(id); });
+        Array.from(roomAudioCache.keys()).forEach((id) => { if (!validIds.has(id)) roomAudioCache.delete(id); });
+        updatePackCountBadge();
+        renderGallery();
+      }
+
+      window.__onRoomStickersUpdated = (jsonStr) => {
+        try {
+          const raw = JSON.parse(jsonStr || '[]');
+          const mapped = raw.map((r) => ({
+            id: r.id,
+            title: r.title,
+            duration: Number(r.duration || 0),
+            createdAt: Number(r.createdAt || Date.now()),
+            visualBlob: base64ToBlob(r.visualBase64 || '', 'image/webp'),
+            audioBlob: roomAudioCache.get(r.id) || null,
+          }));
+          applyGalleryList(mapped);
+        } catch (err) {
+          console.error('Error parsing Room stickers:', err);
+        }
+      };
+
+      window.__onRoomStickerAudioLoaded = (requestId, b64) => {
+        const cb = pendingAudioRequests.get(requestId);
+        if (cb) {
+          pendingAudioRequests.delete(requestId);
+          cb(b64 || '');
+        }
+      };
+
+      function openDb() {
+        return new Promise((resolve, reject) => {
+          const req = indexedDB.open(DB_NAME, DB_VERSION);
+          req.onupgradeneeded = (e) => {
+            const db = e.target.result;
+            if (!db.objectStoreNames.contains(STORE_NAME)) {
+              db.createObjectStore(STORE_NAME, { keyPath: 'id' });
+            }
+          };
+          req.onsuccess = () => resolve(req.result);
+          req.onerror = () => reject(req.error);
+        });
+      }
+
+      async function getAllGallery() {
+        const db = await openDb();
+        return new Promise((resolve, reject) => {
+          const tx = db.transaction(STORE_NAME, 'readonly');
+          const req = tx.objectStore(STORE_NAME).getAll();
+          req.onsuccess = () => resolve((req.result || []).sort((a, b) => b.createdAt - a.createdAt));
+          req.onerror = () => reject(req.error);
+        });
+      }
+
+      async function putGalleryItem(item) {
+        const db = await openDb();
+        return new Promise((resolve, reject) => {
+          const tx = db.transaction(STORE_NAME, 'readwrite');
+          tx.objectStore(STORE_NAME).put(item);
+          tx.oncomplete = () => resolve();
+          tx.onerror = () => reject(tx.error);
+        });
+      }
+
+      async function deleteGalleryItem(id) {
+        const db = await openDb();
+        return new Promise((resolve, reject) => {
+          const tx = db.transaction(STORE_NAME, 'readwrite');
+          tx.objectStore(STORE_NAME).delete(id);
+          tx.oncomplete = () => resolve();
+          tx.onerror = () => reject(tx.error);
+        });
+      }
+
+      async function refreshGallery() {
+        if (isAndroidRoomAvailable()) {
+          window.AndroidBridge.requestRoomStickers();
+          return;
+        }
+        const list = await getAllGallery();
+        applyGalleryList(list);
+      }
+
+      function updatePackCountBadge() {
+        const count = state.selectedPackIds.size;
+        packSelectedCount.textContent = `${count} seleccionados (mín. 3)`;
+      }
+
+      saveToGalleryBtn.addEventListener('click', async () => {
+        if (!state.audioBuffer) {
+          showToast('Graba o elige un audio antes de guardar.');
+          return;
+        }
+        renderVisualToCanvas(visualCanvas);
+        const visualBlob = await canvasToWebpBlob(visualCanvas);
+        const audioBlob = encodeTrimmedWav(state.audioBuffer, state.trimStart, state.trimEnd);
+        const wasEditing = Boolean(state.editingStickerId);
+        const targetId = state.editingStickerId || `snd_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+        const title = stickerNameInput.value.trim() || `SoundSticker #${state.gallery.length + 1}`;
+        const duration = Number((state.trimEnd - state.trimStart).toFixed(1));
+        const now = Date.now();
+
+        if (isAndroidRoomAvailable()) {
+          const [visualB64, audioB64] = await Promise.all([blobToBase64(visualBlob), blobToBase64(audioBlob)]);
+          roomAudioCache.set(targetId, audioBlob);
+          window.AndroidBridge.saveRoomSticker(targetId, title, duration, now, visualB64, audioB64);
+        } else {
+          await putGalleryItem({
+            id: targetId,
+            title,
+            duration,
+            createdAt: now,
+            visualBlob,
+            audioBlob,
+          });
+          await refreshGallery();
+        }
+
+        state.selectedPackIds.add(targetId);
+        updatePackCountBadge();
+        setEditingSticker(null);
+        showToast(wasEditing ? `"${title}" actualizado en la base de datos` : `"${title}" guardado en la base de datos`);
+        if (window.innerWidth < 980) switchTab('gallery');
+      });
+
+      function escapeHtml(s) {
+        return String(s).replace(/[&<>"']/g, (m) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
+      }
+
+      function renderGallery() {
+        state.galleryObjectUrls.forEach((u) => URL.revokeObjectURL(u));
+        state.galleryObjectUrls = [];
+
+        const q = searchGalleryInput.value.trim().toLowerCase();
+        const items = state.gallery.filter((it) => !q || it.title.toLowerCase().includes(q));
+        if (items.length === 0) {
+          galleryGrid.innerHTML = `
+            <div class="empty-state" style="grid-column:1/-1;">
+              <div style="font-size:2.2rem; margin-bottom:6px;">${state.gallery.length === 0 ? '🔊' : '🔍'}</div>
+              <strong>${state.gallery.length === 0 ? 'Aún no hay Sound Stickers' : 'Sin resultados'}</strong>
+              <p style="margin:4px 0 0; font-size:0.83rem;">Crea uno con visual + audio adentro y guárdalo aquí.</p>
+            </div>
+          `;
+          return;
+        }
+
+        galleryGrid.innerHTML = '';
+        items.forEach((item) => {
+          const card = document.createElement('article');
+          card.className = 'gallery-card';
+          const imgUrl = URL.createObjectURL(item.visualBlob);
+          state.galleryObjectUrls.push(imgUrl);
+          const isPlaying = state.activeGalId === item.id;
+          const isChecked = state.selectedPackIds.has(item.id);
+
+          card.innerHTML = `
+            <input class="pack-check" type="checkbox" ${isChecked ? 'checked' : ''} aria-label="Incluir ${escapeHtml(item.title)} en paquete" />
+            <button class="gallery-thumb-btn" type="button" aria-label="Reproducir ${escapeHtml(item.title)}">
+              <img src="${imgUrl}" alt="${escapeHtml(item.title)}" />
+              <span class="gallery-corner-icon${isPlaying ? ' active' : ''}">${isPlaying ? `🔊 ${state.activeGalLoop}/3` : '🔇'}</span>
+            </button>
+            <div class="gallery-info">
+              <h4 class="gallery-title">${escapeHtml(item.title)}</h4>
+              <div class="gallery-sub">⏱️ ${item.duration.toFixed(1)} s • Toca la imagen (3x)</div>
+              <div class="gallery-actions">
+                <button class="btn btn-primary btn-sm btn-gal-wa" type="button">📲 WhatsApp</button>
+                <button class="btn btn-secondary btn-sm btn-gal-export" type="button">✏️ Editar</button>
+                <button class="btn btn-secondary btn-sm btn-gal-edit" type="button" aria-label="Renombrar">🏷️</button>
+                <button class="btn btn-danger btn-sm btn-gal-del" type="button" aria-label="Eliminar">🗑️</button>
+              </div>
+            </div>
+          `;
+
+          card.querySelector('.pack-check').addEventListener('change', (e) => {
+            if (e.target.checked) state.selectedPackIds.add(item.id);
+            else state.selectedPackIds.delete(item.id);
+            updatePackCountBadge();
+          });
+
+          const thumbBtn = card.querySelector('.gallery-thumb-btn');
+          thumbBtn.addEventListener('click', () => playGallerySoundSticker(item, thumbBtn));
+          card.querySelector('.btn-gal-wa').addEventListener('click', async () => {
+            if (isAndroidRoomAvailable() && typeof window.AndroidBridge.reShareRoomStickerToWhatsApp === 'function') {
+              window.AndroidBridge.reShareRoomStickerToWhatsApp(item.id);
+              return;
+            }
+            const audioBlob = await ensureItemAudioBlob(item);
+            if (!audioBlob) {
+              showToast('No se pudo cargar el audio del sticker.');
+              return;
+            }
+            const safeTitle = (item.title || 'AudioSticker').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-zA-Z0-9_-]+/g, '_') || 'AudioSticker';
+            const shared = await shareBlobDirectToWhatsApp(audioBlob, `${safeTitle}.wav`, 'audio/wav', item.title);
+            if (!shared) showToast('Usa un móvil o la app Android para enviar directo a WhatsApp.');
+          });
+          card.querySelector('.btn-gal-export').addEventListener('click', () => loadGalleryItemIntoEditor(item));
+          card.querySelector('.btn-gal-edit').addEventListener('click', () => {
+            state.renameId = item.id;
+            renameInput.value = item.title;
+            renameModal.classList.add('open');
+          });
+          card.querySelector('.btn-gal-del').addEventListener('click', () => {
+            state.deleteId = item.id;
+            deleteMsg.textContent = `¿Eliminar "${item.title}" de tu galería local?`;
+            deleteModal.classList.add('open');
+          });
+          galleryGrid.appendChild(card);
+        });
+      }
+
+      selectAllPackBtn.addEventListener('click', () => {
+        if (state.gallery.length === 0) return;
+        const allSelected = state.selectedPackIds.size === state.gallery.length;
+        state.selectedPackIds.clear();
+        if (!allSelected) state.gallery.forEach((g) => state.selectedPackIds.add(g.id));
+        updatePackCountBadge();
+        renderGallery();
+      });
+
+      function createTrayPngBlobFromBlob(visualBlob) {
+        return new Promise((resolve) => {
+          const url = URL.createObjectURL(visualBlob);
+          const img = new Image();
+          img.onload = () => {
+            URL.revokeObjectURL(url);
+            const c = document.createElement('canvas');
+            c.width = 96;
+            c.height = 96;
+            const ctx = c.getContext('2d');
+            ctx.drawImage(img, 0, 0, 96, 96);
+            c.toBlob((pngBlob) => resolve(pngBlob), 'image/png');
+          };
+          img.src = url;
+        });
+      }
+
+      // Minimal pure-JS Store ZIP builder for .wastickers packs
+      function crc32(bytes) {
+        let crc = 0xffffffff;
+        for (let i = 0; i < bytes.length; i++) {
+          crc ^= bytes[i];
+          for (let j = 0; j < 8; j++) {
+            crc = (crc >>> 1) ^ (crc & 1 ? 0xedb88320 : 0);
+          }
+        }
+        return (crc ^ 0xffffffff) >>> 0;
+      }
+
+      function buildZipBlob(entries) {
+        const enc = new TextEncoder();
+        const localParts = [];
+        const centralParts = [];
+        let offset = 0;
+
+        entries.forEach(({ name, data }) => {
+          const nameBytes = enc.encode(name);
+          const crc = crc32(data);
+          const size = data.length;
+
+          const local = new Uint8Array(30 + nameBytes.length);
+          const lv = new DataView(local.buffer);
+          lv.setUint32(0, 0x04034b50, true);
+          lv.setUint16(4, 20, true);
+          lv.setUint16(6, 0, true);
+          lv.setUint16(8, 0, true); // store
+          lv.setUint16(10, 0, true);
+          lv.setUint16(12, 0, true);
+          lv.setUint32(14, crc, true);
+          lv.setUint32(18, size, true);
+          lv.setUint32(22, size, true);
+          lv.setUint16(26, nameBytes.length, true);
+          lv.setUint16(28, 0, true);
+          local.set(nameBytes, 30);
+
+          localParts.push(local, data);
+
+          const central = new Uint8Array(46 + nameBytes.length);
+          const cv = new DataView(central.buffer);
+          cv.setUint32(0, 0x02014b50, true);
+          cv.setUint16(4, 20, true);
+          cv.setUint16(6, 20, true);
+          cv.setUint16(8, 0, true);
+          cv.setUint16(10, 0, true);
+          cv.setUint16(12, 0, true);
+          cv.setUint16(14, 0, true);
+          cv.setUint32(16, crc, true);
+          cv.setUint32(20, size, true);
+          cv.setUint32(24, size, true);
+          cv.setUint16(28, nameBytes.length, true);
+          cv.setUint16(30, 0, true);
+          cv.setUint16(32, 0, true);
+          cv.setUint16(34, 0, true);
+          cv.setUint16(36, 0, true);
+          cv.setUint32(38, 0, true);
+          cv.setUint32(42, offset, true);
+          central.set(nameBytes, 46);
+
+          centralParts.push(central);
+          offset += local.length + size;
+        });
+
+        const centralSize = centralParts.reduce((s, p) => s + p.length, 0);
+        const end = new Uint8Array(22);
+        const ev = new DataView(end.buffer);
+        ev.setUint32(0, 0x06054b50, true);
+        ev.setUint16(4, 0, true);
+        ev.setUint16(6, 0, true);
+        ev.setUint16(8, entries.length, true);
+        ev.setUint16(10, entries.length, true);
+        ev.setUint32(12, centralSize, true);
+        ev.setUint32(16, offset, true);
+        ev.setUint16(20, 0, true);
+
+        return new Blob([...localParts, ...centralParts, end], { type: 'application/octet-stream' });
+      }
+
+      function getSelectedPackStickers() {
+        const chosen = state.gallery.filter((g) => state.selectedPackIds.has(g.id));
+        if (chosen.length >= 3) return chosen.slice(0, 30);
+        if (state.gallery.length >= 3 && chosen.length === 0) return state.gallery.slice(0, 30);
+        return chosen;
+      }
+
+      async function buildWastickersFile(items, packName) {
+        const enc = new TextEncoder();
+        const trayBlob = await createTrayPngBlobFromBlob(items[0].visualBlob);
+        const entries = [
+          { name: 'title.txt', data: enc.encode(packName) },
+          { name: 'author.txt', data: enc.encode('AudioStickers') },
+          { name: 'tray.png', data: new Uint8Array(await trayBlob.arrayBuffer()) },
+        ];
+        for (let i = 0; i < items.length; i++) {
+          const bytes = new Uint8Array(await items[i].visualBlob.arrayBuffer());
+          entries.push({ name: `sticker_${i + 1}.webp`, data: bytes });
+        }
+        return buildZipBlob(entries);
+      }
+
+      addPackToWhatsAppBtn.addEventListener('click', async () => {
+        const items = getSelectedPackStickers();
+        if (items.length < 3) {
+          showToast('WhatsApp requiere mínimo 3 stickers seleccionados para exportar un paquete.');
+          return;
+        }
+        const packName = packNameInput.value.trim() || 'Mis AudioStickers';
+
+        if (window.AndroidBridge && typeof window.AndroidBridge.exportStickerPackToWhatsApp === 'function') {
+          const trayBlob = await createTrayPngBlobFromBlob(items[0].visualBlob);
+          const trayBase64 = await blobToBase64(trayBlob);
+          const stickers = [];
+          for (let i = 0; i < items.length; i++) {
+            stickers.push({
+              fileName: `sticker_${i + 1}.webp`,
+              base64: await blobToBase64(items[i].visualBlob),
+              emojis: '🔊',
+            });
+          }
+          window.AndroidBridge.exportStickerPackToWhatsApp(JSON.stringify({
+            identifier: `pack_${Date.now()}`,
+            name: packName,
+            publisher: 'AudioStickers',
+            trayBase64,
+            stickers,
+          }));
+          return;
+        }
+
+        // Browser fallback: download/share .wastickers pack
+        const zipBlob = await buildWastickersFile(items, packName);
+        const fileName = `${packName.replace(/[^a-zA-Z0-9_-]+/g, '_') || 'AudioStickers'}.wastickers`;
+        const url = URL.createObjectURL(zipBlob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1500);
+        showToast(`Paquete ${fileName} descargado (${items.length} stickers). Ábrelo con WhatsApp / Sticker Maker.`);
+      });
+
+      downloadWastickersBtn.addEventListener('click', async () => {
+        const items = getSelectedPackStickers();
+        if (items.length < 3) {
+          showToast('Selecciona al menos 3 stickers para generar el paquete .wastickers.');
+          return;
+        }
+        const packName = packNameInput.value.trim() || 'Mis AudioStickers';
+        const zipBlob = await buildWastickersFile(items, packName);
+        const fileName = `${packName.replace(/[^a-zA-Z0-9_-]+/g, '_') || 'AudioStickers'}.wastickers`;
+
+        if (window.AndroidBridge && typeof window.AndroidBridge.saveFile === 'function') {
+          const b64 = await blobToBase64(zipBlob);
+          window.AndroidBridge.saveFile(b64, fileName, 'application/octet-stream');
+          return;
+        }
+
+        const url = URL.createObjectURL(zipBlob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1500);
+        showToast(`Paquete descargado: ${fileName}`);
+      });
+
+      async function playGallerySoundSticker(item, thumbBtn) {
+        if (state.activeGalId === item.id) { stopGalleryPlayback(); return; }
+        stopSimulator();
+        stopPreview();
+        stopGalleryPlayback();
+
+        const audioBlob = await ensureItemAudioBlob(item);
+        if (!audioBlob) {
+          showToast('No se pudo cargar el audio.');
+          return;
+        }
+
+        state.activeGalId = item.id;
+        state.activeGalLoop = 0;
+
+        const playNext = () => {
+          if (state.activeGalId !== item.id) return;
+          state.activeGalLoop += 1;
+          if (state.activeGalLoop > 3) { stopGalleryPlayback(); return; }
+          renderGallery();
+          const url = URL.createObjectURL(audioBlob);
+          const audio = new Audio(url);
+          state.activeGalAudio = audio;
+          audio.onended = () => {
+            URL.revokeObjectURL(url);
+            if (state.activeGalId === item.id && state.activeGalLoop < 3) playNext();
+            else stopGalleryPlayback();
+          };
+          audio.play().catch(() => stopGalleryPlayback());
+        };
+
+        triggerBounceAnimation(thumbBtn);
+        playNext();
+      }
+
+      function stopGalleryPlayback() {
+        if (state.activeGalAudio) { state.activeGalAudio.pause(); state.activeGalAudio = null; }
+        if (state.activeGalId) { state.activeGalId = null; state.activeGalLoop = 0; renderGallery(); }
+      }
+
+      async function loadGalleryItemIntoEditor(item) {
+        const audioBlob = await ensureItemAudioBlob(item);
+        if (!audioBlob) {
+          showToast('No se pudo cargar el audio para editar.');
+          return;
+        }
+        const url = URL.createObjectURL(item.visualBlob);
+        const img = new Image();
+        img.onload = async () => {
+          URL.revokeObjectURL(url);
+          state.loadedImage = img;
+          state.panX = 0;
+          state.panY = 0;
+          state.visualZoom = 1;
+          setVisualMode('image');
+          stickerNameInput.value = item.title;
+          setEditingSticker(item.id, item.title);
+          await loadAudioBlob(audioBlob, item.title);
+          if (window.innerWidth < 980) switchTab('create');
+          showToast('Cargado en el editor. Ajusta y toca "Actualizar Sticker" o compártelo.');
+        };
+        img.src = url;
+      }
+
+      searchGalleryInput.addEventListener('input', renderGallery);
+      tabCreateBtn.addEventListener('click', () => switchTab('create'));
+      tabGalleryBtn.addEventListener('click', () => switchTab('gallery'));
+      themeToggleBtn.addEventListener('click', () => {
+        const cur = document.documentElement.getAttribute('data-theme') || 'dark';
+        applyTheme(cur === 'dark' ? 'light' : 'dark');
+      });
+      guideHeaderBtn.addEventListener('click', () => guideModal.classList.add('open'));
+      closeGuideBtn.addEventListener('click', () => guideModal.classList.remove('open'));
+      guideModal.addEventListener('click', (e) => { if (e.target === guideModal) guideModal.classList.remove('open'); });
+
+      closeRenameBtn.addEventListener('click', () => renameModal.classList.remove('open'));
+      cancelRenameBtn.addEventListener('click', () => renameModal.classList.remove('open'));
+      confirmRenameBtn.addEventListener('click', async () => {
+        const item = state.gallery.find((g) => g.id === state.renameId);
+        const name = renameInput.value.trim();
+        if (!item || !name) return;
+        if (isAndroidRoomAvailable() && typeof window.AndroidBridge.renameRoomSticker === 'function') {
+          window.AndroidBridge.renameRoomSticker(item.id, name);
+        } else {
+          item.title = name;
+          await putGalleryItem(item);
+          await refreshGallery();
+        }
+        renameModal.classList.remove('open');
+        showToast('Renombrado');
+      });
+
+      closeDeleteBtn.addEventListener('click', () => deleteModal.classList.remove('open'));
+      cancelDeleteBtn.addEventListener('click', () => deleteModal.classList.remove('open'));
+      confirmDeleteBtn.addEventListener('click', async () => {
+        if (!state.deleteId) return;
+        if (state.activeGalId === state.deleteId) stopGalleryPlayback();
+        if (state.editingStickerId === state.deleteId) setEditingSticker(null);
+        roomAudioCache.delete(state.deleteId);
+        if (isAndroidRoomAvailable() && typeof window.AndroidBridge.deleteRoomSticker === 'function') {
+          window.AndroidBridge.deleteRoomSticker(state.deleteId);
+        } else {
+          await deleteGalleryItem(state.deleteId);
+          await refreshGallery();
+        }
+        state.deleteId = null;
+        deleteModal.classList.remove('open');
+        showToast('Eliminado');
+      });
+
+      window.__audioStickersHandleBack = () => {
+        if (guideModal.classList.contains('open') || renameModal.classList.contains('open') || deleteModal.classList.contains('open')) {
+          guideModal.classList.remove('open');
+          renameModal.classList.remove('open');
+          deleteModal.classList.remove('open');
+          return true;
+        }
+        if (window.innerWidth < 980 && state.activeTab === 'gallery') {
+          switchTab('create');
+          return true;
+        }
+        return false;
+      };
+
+      if (typeof ResizeObserver !== 'undefined') {
+        new ResizeObserver(() => { if (state.audioBuffer) drawWaveform(); }).observe(waveformCanvas);
+      }
+
+      applyTheme(localStorage.getItem(THEME_KEY) || 'dark');
+      initVisualEmojiPicker();
+      initMicUI();
+      initSfxGrid();
+      setVisualMode('emoji');
+      refreshGallery().catch((e) => console.error(e));
+    })();
+  </script>
+</body>
+</html>
