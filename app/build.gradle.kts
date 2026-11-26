@@ -61,6 +61,10 @@ android {
     buildConfig = true
   }
   testOptions { unitTests { isIncludeAndroidResources = true } }
+  lint {
+    // MainActivity extends ComponentActivity; this Fragment compatibility check is a false positive here.
+    disable += "InvalidFragmentVersionForActivityResult"
+  }
   dependenciesInfo {
     includeInApk = false
     includeInBundle = true
