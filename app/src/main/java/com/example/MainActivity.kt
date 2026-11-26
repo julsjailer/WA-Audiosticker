@@ -488,22 +488,41 @@ class MainActivity : ComponentActivity() {
           val authority = "$packageName.stickercontentprovider"
           contentResolver.notifyChange(Uri.parse("content://$authority/metadata"), null)
 
-          val waIntent =
+          val importIntent =
             Intent("com.whatsapp.intent.action.ENABLE_STICKER_PACK").apply {
               putExtra("sticker_pack_id", identifier)
               putExtra("sticker_pack_authority", authority)
               putExtra("sticker_pack_name", packName)
             }
 
-          try {
-            startActivity(Intent.createChooser(waIntent, "Agregar paquete a WhatsApp"))
-          } catch (_: android.content.ActivityNotFoundException) {
-            Toast.makeText(
-                this@MainActivity,
-                "WhatsApp no está instalado aquí. Usa 'Descargar .wastickers'.",
-                Toast.LENGTH_LONG,
-              )
-              .show()
+          // Launch the supported import action directly in an installed WhatsApp variant.
+          // A generic chooser may show WhatsApp but can fail to route the import action.
+          val whatsappPackages = listOf("com.whatsapp", "com.whatsapp.w4b")
+          var launched = false
+          var lastLaunchError: Exception? = null
+          for (targetPackage in whatsappPackages) {
+            try {
+              val targetedIntent = Intent(importIntent).setPackage(targetPackage)
+              if (targetedIntent.resolveActivity(packageManager) != null) {
+                startActivity(targetedIntent)
+                launched = true
+                break
+              }
+            } catch (e: Exception) {
+              lastLaunchError = e
+              android.util.Log.e("AudioStickers", "Failed to launch sticker import for $targetPackage", e)
+            }
+          }
+
+          if (!launched) {
+            val message =
+              if (lastLaunchError != null) {
+                "No se pudo abrir la importación de stickers en WhatsApp: ${lastLaunchError.message ?: lastLaunchError.javaClass.simpleName}"
+              } else {
+                "WhatsApp no reconoce la acción de importar este paquete. Puedes descargar .wastickers para probarlo con un importador compatible."
+              }
+            Toast.makeText(this@MainActivity, message, Toast.LENGTH_LONG).show()
+            android.util.Log.w("AudioStickers", message, lastLaunchError)
           }
         } catch (_: Exception) {
           Toast.makeText(this@MainActivity, getString(R.string.share_error), Toast.LENGTH_SHORT)
