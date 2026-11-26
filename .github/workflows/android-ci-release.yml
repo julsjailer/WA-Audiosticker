@@ -6,6 +6,7 @@ on:
       - main
       - ci-apk-release
       - release-v0.1.0
+      - feature/sound-sticker-editor-foundation
     tags:
       - "v*"
   pull_request:
