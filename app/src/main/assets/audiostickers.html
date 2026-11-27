@@ -856,17 +856,16 @@
       background: rgba(0, 0, 0, 0.68);
       backdrop-filter: blur(4px);
       display: none;
-      align-items: flex-end;
+      align-items: center;
       justify-content: center;
       padding: 16px;
     }
-    @media (min-width: 640px) { .modal-backdrop { align-items: center; } }
     .modal-backdrop.open { display: flex; }
 
     .modal-sheet {
       width: 100%;
       max-width: 480px;
-      max-height: 88vh;
+      max-height: 100%;
       overflow-y: auto;
       background: var(--bg-surface);
       border: 1px solid var(--border);

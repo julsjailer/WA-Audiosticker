@@ -5,6 +5,13 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+    <!-- Galería propia: ver fotos y videos para elegirlos. -->
+    <uses-permission
+        android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32" />
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
+    <uses-permission android:name="android.permission.READ_MEDIA_VISUAL_USER_SELECTED" />
 
     <queries>
         <package android:name="com.whatsapp" />
@@ -41,6 +48,12 @@
             android:launchMode="singleTop"
             android:theme="@style/Theme.MyApplication"
             android:windowSoftInputMode="adjustResize" />
+
+        <!-- Galería propia de fotos y videos. -->
+        <activity
+            android:name=".gallery.GalleryActivity"
+            android:exported="false"
+            android:theme="@style/Theme.MyApplication" />
 
         <!-- Biblioteca de audios de MyInstants. -->
         <activity

@@ -25,4 +25,15 @@
     <string name="sounds_downloading">Descargando audio…</string>
     <string name="sounds_failed">No se pudo descargar ese audio.</string>
     <string name="sounds_only_audio">Aquí solo se pueden descargar audios.</string>
+    <string name="gallery_videos">Tus videos</string>
+    <string name="gallery_photos">Tus fotos</string>
+    <string name="gallery_other_files">Otros archivos</string>
+    <string name="gallery_permission">Para mostrar tu galería, la app necesita permiso para ver tus fotos y videos. No se envían a ningún sitio al elegirlos.</string>
+    <string name="gallery_allow">Permitir acceso</string>
+    <string name="gallery_allow_more">Permitir más fotos y videos</string>
+    <string name="gallery_settings">Abrir ajustes de la app</string>
+    <string name="gallery_loading">Cargando…</string>
+    <string name="gallery_empty">No hay archivos que mostrar.</string>
+    <string name="gallery_video_item">Video de la galería</string>
+    <string name="gallery_photo_item">Foto de la galería</string>
 </resources>

@@ -51,6 +51,7 @@ The application ID is `io.github.julsjailer.audiostickers`. It installs next to 
 
 - **Paquetes para WhatsApp:** 512×512, de 3 a 30 por paquete y hasta 10 paquetes. Fijos (máximo 100 KB) o **animados** (máximo 500 KB y 10 s; un video guardado en la galería queda animado, con un creador propio en `assets/animacion.js`). Un paquete no puede mezclar ambos tipos y **ninguno lleva sonido**: el formato de paquetes no lo admite. Reexportar con el mismo nombre actualiza el paquete.
 - **Encuadre:** zoom, posición horizontal y vertical, y «Llenar cuadro» o «Ver completo».
+- **Galería propia:** al elegir una foto o un video, la app pide permiso y muestra los del teléfono, del más nuevo al más antiguo. «Otros archivos» abre el selector del sistema.
 - **Audios:** micrófono, archivo propio, efectos o la biblioteca de [MyInstants](https://www.myinstants.com/es/index/us/). La app solo muestra el sitio y entrega al editor el audio que la persona descarga. Sus [condiciones](https://www.myinstants.com/en/terms_of_use.html) limitan el uso a personal y no comercial.
 - **Enviar como sticker con sonido (experimental):** pasa el sticker del editor a WhatsApp Web dentro de la app; solo queda enviarlo y elegir los chats.
 - **Estudio (experimental):** WhatsApp Web dentro de la app para crear y enviar stickers con sonido. Es no oficial: WhatsApp puede restringir la cuenta y puede dejar de funcionar sin aviso. La sesión queda guardada en la app (se pierde al desinstalarla, al borrar sus datos o si WhatsApp desvincula el dispositivo).

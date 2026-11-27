@@ -14,6 +14,7 @@ import android.os.Environment
 import android.provider.MediaStore
 import android.util.Base64
 import android.util.Log
+import android.view.ViewGroup
 import android.webkit.JavascriptInterface
 import android.webkit.PermissionRequest
 import android.webkit.ValueCallback
@@ -50,6 +51,8 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
+import com.example.gallery.GalleryActivity
+import com.example.gallery.MediaGallery
 import com.example.sounds.SoundLibraryActivity
 import com.example.stickers.StickerPackStore
 import com.example.ui.SoundStickerViewModel
@@ -70,6 +73,7 @@ class MainActivity : ComponentActivity() {
   private var pendingPermissionRequest: PermissionRequest? = null
   private var pendingFileCallback: ValueCallback<Array<Uri>>? = null
   private var pendingSaveBytes: ByteArray? = null
+  private var pendingMimeTypes: Array<String> = arrayOf("*/*")
 
   private val micPermissionLauncher =
     registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
@@ -94,6 +98,31 @@ class MainActivity : ComponentActivity() {
         callback.onReceiveValue(if (uri != null) arrayOf(uri) else null)
       }
     }
+
+  private val galleryLauncher =
+    registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+      if (result.resultCode == GalleryActivity.RESULT_OTHER_FILES) {
+        openMediaLauncher.launch(pendingMimeTypes)
+        return@registerForActivityResult
+      }
+      val callback = pendingFileCallback
+      pendingFileCallback = null
+      val uri = result.data?.data?.takeIf { result.resultCode == RESULT_OK }
+      callback?.onReceiveValue(if (uri != null) arrayOf(uri) else null)
+    }
+
+  /** Fotos y videos se eligen en la galería propia; el resto, en el selector del sistema. */
+  private fun chooseFile(params: WebChromeClient.FileChooserParams?) {
+    pendingMimeTypes = resolveMimeTypes(params)
+    val kind = MediaGallery.kindFor(params?.acceptTypes)
+    if (kind == null) {
+      openMediaLauncher.launch(pendingMimeTypes)
+    } else {
+      galleryLauncher.launch(
+        Intent(this, GalleryActivity::class.java).putExtra(GalleryActivity.EXTRA_KIND, kind.name)
+      )
+    }
+  }
 
   private val addStickerPackLauncher =
     registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
@@ -254,6 +283,12 @@ class MainActivity : ComponentActivity() {
         modifier = Modifier.fillMaxSize(),
         factory = { context ->
           WebView(context).apply {
+            // Sin esto el WebView cree que su alto es cero y las ventanas salen aplastadas.
+            layoutParams =
+              ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT,
+              )
             setBackgroundColor(android.graphics.Color.parseColor("#0B141A"))
             settings.apply {
               javaScriptEnabled = true
@@ -315,7 +350,7 @@ class MainActivity : ComponentActivity() {
                   pendingFileCallback?.onReceiveValue(null)
                   pendingFileCallback = filePathCallback
                   return try {
-                    openMediaLauncher.launch(resolveMimeTypes(fileChooserParams))
+                    chooseFile(fileChooserParams)
                     true
                   } catch (_: Exception) {
                     pendingFileCallback = null
