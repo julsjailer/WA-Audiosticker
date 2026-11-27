@@ -20,4 +20,9 @@
     <string name="web_not_ready">Espera a que cargue WhatsApp Web.</string>
     <string name="web_no_downloads">Las descargas no están disponibles en esta pantalla.</string>
     <string name="web_crashed">La pantalla se quedó sin memoria. Prueba con un video más corto.</string>
+    <string name="web_sticker_waiting">Cuando carguen tus chats, tu sticker se abrirá solo. Toca «Enviar» y elige a quién reenviarlo.</string>
+    <string name="sounds_hint">Abre un sonido y toca «Descargar»: se pondrá solo en tu sticker.</string>
+    <string name="sounds_downloading">Descargando audio…</string>
+    <string name="sounds_failed">No se pudo descargar ese audio.</string>
+    <string name="sounds_only_audio">Aquí solo se pueden descargar audios.</string>
 </resources>

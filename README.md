@@ -2,6 +2,8 @@
 
 Android Kotlin app for creating, trimming and sharing audio stickers for WhatsApp.
 
+**Creado por Jul's Jailer** · © 2026. Ver [LICENSE](LICENSE).
+
 ## Descargar el APK
 
 Cada cambio enviado a `main` o `experimento/whatsapp-web` publica el APK en **[Releases](https://github.com/julsjailer/WA-Audiosticker/releases)**: abre la versión más reciente y descarga el archivo `.apk` de **Assets**.
@@ -24,14 +26,14 @@ git push origin v1.0.0
 
 ## Firma del APK
 
-Para que cada versión se instale encima de la anterior, configura estos secretos en **Settings → Secrets and variables → Actions**:
+Para que cada versión se instale encima de la anterior hace falta **un solo secreto**, una única vez:
 
-- `ANDROID_KEYSTORE_BASE64`: archivo del almacén de claves en base64
-- `ANDROID_STORE_PASSWORD`: contraseña del almacén
-- `ANDROID_KEY_ALIAS`: alias de la clave
-- `ANDROID_KEY_PASSWORD`: contraseña de la clave
+1. Abre **[crear secreto](https://github.com/julsjailer/WA-Audiosticker/settings/secrets/actions/new)**.
+2. **Name:** `FIRMA`
+3. **Secret:** la línea completa del archivo privado `FIRMA.txt` (formato `contraseña:almacén_en_base64`; el alias de la clave es `audiostickers`).
+4. **Add secret**. La siguiente compilación ya queda firmada con tu clave.
 
-Sin ellos se usa una clave temporal distinta en cada compilación y hay que desinstalar antes de instalar. Guarda una copia de la clave y las contraseñas en un lugar privado y nunca las subas al repositorio.
+Sin ese secreto se usa una clave temporal distinta en cada compilación y hay que desinstalar antes de instalar. Guarda `FIRMA.txt` en un lugar privado y nunca lo subas al repositorio.
 
 ## Build configuration
 
@@ -47,10 +49,14 @@ The application ID is `io.github.julsjailer.audiostickers`. It installs next to 
 
 ## Cómo funcionan los stickers
 
-- **Paquetes para WhatsApp:** 512×512, de 3 a 30 por paquete y hasta 10 paquetes. Fijos (máximo 100 KB) o **animados** (máximo 500 KB y 10 s; un video guardado en la galería queda animado). Un paquete no puede mezclar ambos tipos y **ninguno lleva sonido**: el formato de paquetes no lo admite. Reexportar con el mismo nombre actualiza el paquete.
+- **Paquetes para WhatsApp:** 512×512, de 3 a 30 por paquete y hasta 10 paquetes. Fijos (máximo 100 KB) o **animados** (máximo 500 KB y 10 s; un video guardado en la galería queda animado, con un creador propio en `assets/animacion.js`). Un paquete no puede mezclar ambos tipos y **ninguno lleva sonido**: el formato de paquetes no lo admite. Reexportar con el mismo nombre actualiza el paquete.
 - **Encuadre:** zoom, posición horizontal y vertical, y «Llenar cuadro» o «Ver completo».
-- **Estudio (stickers con sonido, experimental):** abre WhatsApp Web dentro de la app, crea el sticker con su audio y lo envía. Es no oficial: WhatsApp puede restringir la cuenta y puede dejar de funcionar sin aviso.
+- **Audios:** micrófono, archivo propio, efectos o la biblioteca de [MyInstants](https://www.myinstants.com/es/index/us/). La app solo muestra el sitio y entrega al editor el audio que la persona descarga. Sus [condiciones](https://www.myinstants.com/en/terms_of_use.html) limitan el uso a personal y no comercial.
+- **Enviar como sticker con sonido (experimental):** pasa el sticker del editor a WhatsApp Web dentro de la app; solo queda enviarlo y elegir los chats.
+- **Estudio (experimental):** WhatsApp Web dentro de la app para crear y enviar stickers con sonido. Es no oficial: WhatsApp puede restringir la cuenta y puede dejar de funcionar sin aviso. La sesión queda guardada en la app (se pierde al desinstalarla, al borrar sus datos o si WhatsApp desvincula el dispositivo).
 
-## Código de terceros
+## Autoría y código de terceros
 
-`app/src/main/assets/waas` se basa en [WA-audio-stickers](https://github.com/Shirtep/WA-audio-stickers) de Shirtep, con cambios propios (ver `ORIGEN.md` en esa carpeta). Licencia PolyForm Noncommercial 1.0.0: **solo uso no comercial**.
+El código propio de la app es de **Jul's Jailer** (ver [LICENSE](LICENSE)).
+
+`app/src/main/assets/waas` se basa en [WA-audio-stickers](https://github.com/Shirtep/WA-audio-stickers) de Shirtep, con cambios propios (ver `ORIGEN.md` en esa carpeta). Esa parte sigue siendo de su autor, bajo licencia PolyForm Noncommercial 1.0.0: **mientras la app la incluya, solo se puede distribuir sin fines comerciales**.

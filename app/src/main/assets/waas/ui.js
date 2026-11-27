@@ -529,7 +529,7 @@
         if (!p) return null;
         const v = p.visual;
         const followsAudio = v.kind === "image" || p.fit !== "independiente";
-        return JSON.stringify([v.kind, fileId(v.file), v.start, v.dur, followsAudio ? p.fit : "", followsAudio ? +p.audio.dur.toFixed(3) : "", framer.value]);
+        return JSON.stringify([v.kind, fileId(v.file), v.start, v.dur, followsAudio ? p.fit : "", followsAudio ? +p.audio.dur.toFixed(3) : "", framer.value, v.mask]);
       };
       // Clave del resultado: todo lo que cambia el sticker o su audio (el paquete y el autor se aplican al enviar).
       const fullKey = () => {
@@ -540,7 +540,7 @@
       const fresh = () => !!f.an && f.anKey === key();
       const CALC_HINT = "Lee el tramo una vez y estima el peso de cada combinación.";
       const clearAnalysis = () => { if (f.an) WAAS.release(f.an); f.an = null; f.sel = null; gridHost.textContent = ""; selLbl.textContent = ""; calcInfo.textContent = CALC_HINT; };
-      const analyze = (p, signal, onProgress) => WAAS.analyze({ ...p, mode: framer.value, signal, onProgress });
+      const analyze = (p, signal, onProgress) => WAAS.analyze({ ...p, mode: p.visual.mask ? { ...framer.value, mask: p.visual.mask } : framer.value, signal, onProgress });
       calcInfo.textContent = CALC_HINT;
 
       const renderGrid = () => {
@@ -743,6 +743,8 @@
         onSent: () => {},
         onUpdate: () => {},
         setStatus, clear, loadMeta,
+        // Para un video enviado desde el editor: deja elegido «mi chat + Reenviar» y crea el sticker.
+        start() { destSel.value = "propio"; api.refresh(); createBtn.click(); },
         get hasResult() { return !!c.result; },
         refresh() {
           const stale = !!c.result && c.key !== fmt.fullKey();
@@ -794,11 +796,12 @@
       const fmt = makeFormat({
         getSource: () => (s.file ? trimmer.media : null), watch: [trimmer.media],
         getParams: () => (s.file && trimmer.loaded ? {
-          visual: { kind: "video", file: s.file, start: trimmer.start, dur: trimmer.len },
+          visual: { kind: "video", file: s.file, start: trimmer.start, dur: trimmer.len, mask: s.mask },
           audio: { file: s.file, start: trimmer.start, dur: trimmer.len }, fit: "repetir",
         } : null),
       });
-      picker.onPick(async (f) => {
+      const loadFile = async (f) => {
+        s.mask = null;
         trimmer.stop();
         fmt.reset();
         form.create.clear();
@@ -818,7 +821,15 @@
           }
         });
         changed();
-      });
+      };
+      picker.onPick(loadFile);
+      // Video enviado desde el editor de la app: se carga y se crea el sticker directamente.
+      G.receiveVideo = async (f, mask) => {
+        await loadFile(f);
+        if (s.file !== f) return;
+        s.mask = mask;
+        form.create.start();
+      };
       trimmer.onChange(changed);
       const form = makeForm({
         id: "video", title: "Video",
@@ -1012,12 +1023,12 @@
     const closeBtn = h("button", { class: "close", title: "Cerrar", textContent: "×" });
     const panel = h("div", { class: "panel" },
       h("header", null, h("div", { class: "logo" }, "♪"),
-        h("div", { class: "grow" }, h("h2", null, "AudioStickers · Estudio"), h("div", { class: "muted" }, "Stickers con sonido, hechos en tu teléfono")),
+        h("div", { class: "grow" }, h("h2", null, "AudioStickers · Estudio"), h("div", { class: "muted" }, "Una app de Jul's Jailer · stickers con sonido")),
         closeBtn),
       h("nav", { class: "tabs" }, tabBtns),
       G.forms.map((f) => f.el), tools,
       // Crédito exigido por la licencia del código en el que se basa esta pantalla.
-      h("div", { class: "credit" }, "Basado en WA-audio-stickers de Shirtep (github.com/Shirtep/WA-audio-stickers) · Licencia PolyForm Noncommercial 1.0.0"));
+      h("div", { class: "credit" }, "Adaptado por Jul's Jailer · basado en WA-audio-stickers de Shirtep (github.com/Shirtep/WA-audio-stickers) · Licencia PolyForm Noncommercial 1.0.0"));
     const overlay = h("div", { class: "overlay", style: "display:none" }, panel);
     root.append(overlay);
 
@@ -1046,6 +1057,13 @@
       if (ev.source === window && ev.data && ev.data.__waas === "togglePanel") toggle();
     });
     WAAS.togglePanel = toggle;
+    WAAS.receiveVideo = async (file, mask) => {
+      if (G.busy) return false;
+      if (overlay.style.display === "none") open();
+      selectTab(G.forms.findIndex((f) => f.id === "video"));
+      await G.receiveVideo(file, mask);
+      return true;
+    };
     closeBtn.addEventListener("click", close);
     overlay.addEventListener("click", (e) => { if (e.target === overlay) close(); });
 

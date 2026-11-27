@@ -50,9 +50,11 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
+import com.example.sounds.SoundLibraryActivity
 import com.example.stickers.StickerPackStore
 import com.example.ui.SoundStickerViewModel
 import com.example.ui.theme.MyApplicationTheme
+import com.example.whatsappweb.SoundHandoff
 import com.example.whatsappweb.WhatsAppWebActivity
 import java.io.File
 import java.io.FileOutputStream
@@ -113,6 +115,29 @@ class MainActivity : ComponentActivity() {
       }
     }
 
+  private val soundLibraryLauncher =
+    registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+      val name = result.data?.getStringExtra(SoundLibraryActivity.EXTRA_NAME)
+      if (result.resultCode == RESULT_OK && name != null) deliverLibrarySound(name)
+    }
+
+  /** Pasa a la página el audio descargado de la biblioteca. */
+  private fun deliverLibrarySound(name: String) {
+    lifecycleScope.launch {
+      val base64 =
+        withContext(Dispatchers.IO) {
+          val file = SoundLibraryActivity.downloadedFile(this@MainActivity)
+          val bytes = if (file.isFile) file.readBytes() else null
+          file.delete()
+          bytes?.let { Base64.encodeToString(it, Base64.NO_WRAP) }
+        } ?: return@launch
+      webViewRef?.evaluateJavascript(
+        "if(window.__onLibrarySound){window.__onLibrarySound(${JSONObject.quote(name)},'$base64');}",
+        null,
+      )
+    }
+  }
+
   private val saveFileLauncher =
     registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
       val bytes = pendingSaveBytes
@@ -139,7 +164,7 @@ class MainActivity : ComponentActivity() {
     )
 
     fun readAsset(path: String) = assets.open(path).bufferedReader(Charsets.UTF_8).use { it.readText() }
-    val htmlContent = LocalPage.compose(readAsset("audiostickers.html"), readAsset("waas/convert.js"))
+    val htmlContent = LocalPage.compose(readAsset("audiostickers.html"), readAsset("animacion.js"))
 
     setContent {
       MyApplicationTheme(darkTheme = true, dynamicColor = false) {
@@ -318,6 +343,42 @@ class MainActivity : ComponentActivity() {
     fun openSoundStickerWeb() {
       runOnUiThread {
         startActivity(Intent(this@MainActivity, WhatsAppWebActivity::class.java))
+      }
+    }
+
+    @JavascriptInterface
+    fun openSoundLibrary() {
+      runOnUiThread {
+        soundLibraryLauncher.launch(Intent(this@MainActivity, SoundLibraryActivity::class.java))
+      }
+    }
+
+    @JavascriptInterface
+    fun sendWithSound(base64Data: String, mimeType: String, shape: String) {
+      lifecycleScope.launch {
+        val type = SoundHandoff.videoType(mimeType)
+        val saved =
+          type != null &&
+            withContext(Dispatchers.IO) {
+              runCatching {
+                  val bytes = Base64.decode(base64Data, Base64.DEFAULT)
+                  require(bytes.size <= SoundHandoff.MAX_BYTES)
+                  val file = SoundHandoff.file(this@MainActivity)
+                  file.parentFile?.mkdirs()
+                  file.writeBytes(bytes)
+                }
+                .isSuccess
+            }
+        if (saved) {
+          startActivity(
+            Intent(this@MainActivity, WhatsAppWebActivity::class.java)
+              .putExtra(WhatsAppWebActivity.EXTRA_STICKER_TYPE, type)
+              .putExtra(WhatsAppWebActivity.EXTRA_STICKER_SHAPE, shape)
+          )
+        } else {
+          Toast.makeText(this@MainActivity, getString(R.string.share_error), Toast.LENGTH_SHORT)
+            .show()
+        }
       }
     }
 

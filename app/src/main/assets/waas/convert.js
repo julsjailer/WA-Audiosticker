@@ -107,10 +107,21 @@
     return { x: place(w, m.x), y: place(h, m.y), w, h };
   }
 
+  // mode.mask ("rounded" o "circle") recorta la forma elegida en el editor de la app.
   function drawFrame(ctx, v, mode, side) {
     const r = frameRect(srcW(v), srcH(v), mode, side);
+    const mask = mode && mode.mask;
     ctx.clearRect(0, 0, side, side);
+    ctx.save();
+    if (mask) {
+      const u = side / 512;
+      ctx.beginPath();
+      if (mask === "circle") ctx.arc(side / 2, side / 2, side / 2 - 5 * u, 0, Math.PI * 2);
+      else ctx.roundRect(u, u, side - 2 * u, side - 2 * u, 64 * u);
+      ctx.clip();
+    }
     ctx.drawImage(v, r.x, r.y, r.w, r.h);
+    ctx.restore();
   }
 
   async function probeVideo(file) {
@@ -568,72 +579,6 @@
     return 0;
   }
 
-  // ---------------------------------------------------------------- sticker animado para paquetes
-  // Los paquetes que agrega otra app tienen reglas propias: 512×512, hasta 500 KB, hasta 10 s,
-  // 2 cuadros o más de al menos 8 ms cada uno. No pueden llevar sonido.
-  const PACK_MAX_BYTES = 500_000;
-  const PACK_MAX_SECONDS = 10;
-  const PACK_CAPTURE_FPS = 12;
-  // [fps, calidad], de mejor a peor.
-  const PACK_PRESETS = [[12, 0.75], [12, 0.55], [12, 0.4], [10, 0.4], [10, 0.28], [8, 0.28], [8, 0.18], [8, 0.1], [6, 0.08], [5, 0.03]];
-
-  // render(segundo) dibuja el instante pedido y devuelve un canvas (u otra imagen) cuadrado.
-  async function encodePackAnimation({ duration, render, onProgress, signal }) {
-    const prog = onProgress || (() => {});
-    const dur = Math.min(PACK_MAX_SECONDS, Math.max(0.4, duration || 0));
-    const n = Math.max(2, Math.round(dur * PACK_CAPTURE_FPS));
-    const captureFps = n / dur;
-    const frames = [];
-    const fpCanvas = new OffscreenCanvas(32, 32);
-    const fpCtx = fpCanvas.getContext("2d", { willReadFrequently: true });
-    try {
-      for (let i = 0; i < n; i++) {
-        checkAbort(signal);
-        const source = await render(i / captureFps);
-        fpCtx.clearRect(0, 0, 32, 32);
-        fpCtx.drawImage(source, 0, 0, 32, 32);
-        frames.push({ bmp: await createImageBitmap(source), fp: fpCtx.getImageData(0, 0, 32, 32).data });
-        prog("Leyendo cuadros", (0.6 * (i + 1)) / n);
-      }
-      const canvas = new OffscreenCanvas(SIDE, SIDE);
-      const ctx = canvas.getContext("2d");
-      for (let a = 0; a < PACK_PRESETS.length; a++) {
-        const [fps, q] = PACK_PRESETS[a];
-        const p = plan(frames.length, dur, fps, captureFps);
-        const at = (k) => frames[p[k].idx];
-        const unique = p.reduce((c, _, k) => c + (!k || !sameBytes(at(k).fp, at(k - 1).fp) ? 1 : 0), 0);
-        // Muestra de unos pocos cuadros para descartar sin codificar todo lo que no va a caber.
-        if (a < PACK_PRESETS.length - 1) {
-          const m = Math.min(8, p.length);
-          let sum = 0;
-          for (let j = 0; j < m; j++) sum += (await encodeStaticFrame(at(Math.floor((j * p.length) / m)).bmp, q, canvas, ctx)).payload.length;
-          if ((sum / m + 24) * unique > PACK_MAX_BYTES * 1.15) continue;
-        }
-        const out = [];
-        for (let k = 0; k < p.length; k++) {
-          checkAbort(signal);
-          const prev = out[out.length - 1];
-          if (prev && sameBytes(at(k).fp, at(k - 1).fp)) { prev.durationMs += p[k].durationMs; continue; }
-          const enc = await encodeStaticFrame(at(k).bmp, q, canvas, ctx);
-          out.push({ payload: enc.payload, hasAlpha: enc.hasAlpha, durationMs: p[k].durationMs });
-          prog("Creando la animación", 0.6 + (0.4 * (k + 1)) / p.length);
-        }
-        // Un sticker animado necesita 2 cuadros: si la imagen no cambia, se parte el único en dos.
-        if (out.length === 1) {
-          const half = Math.floor(out[0].durationMs / 2);
-          out.push({ ...out[0], durationMs: half });
-          out[0].durationMs -= half;
-        }
-        const bytes = buildAnimatedWebp(out, null, SIDE);
-        log("info", "paquete:intento", { fps, calidad: q, cuadros: out.length, bytes: bytes.length });
-        if (bytes.length <= PACK_MAX_BYTES) return { bytes, fps, quality: q, frames: out.length, durationMs: Math.round(dur * 1000) };
-      }
-      throw new Error("No cabe en 500 KB: usa un tramo más corto.");
-    } finally {
-      for (const f of frames) f.bmp.close();
-    }
-  }
-
   // ---------------------------------------------------------------- audio
   // El audio decodificado se guarda por archivo: la forma de onda y la creación no lo decodifican dos veces.
   const audioCache = new WeakMap();
@@ -1057,8 +1002,7 @@
   WAAS.retagWebp = retagWebp;
   WAAS.create = create;
   WAAS.release = release;
-  WAAS.encodePackAnimation = encodePackAnimation;
   WAAS.frameRect = frameRect;
   WAAS.limits = { SIDE, MAX_STICKER_BYTES, MAX_AUDIO_BYTES, SIDES, FPS_LIST };
-  WAAS._internals = { loadVideo, seek, buildOggOpus, buildAnimatedWebp, buildStillWebp, fitTimeline, exifWhatsApp, readChunks, plan, sha256b64, score };
+  WAAS._internals = { buildOggOpus, buildAnimatedWebp, buildStillWebp, fitTimeline, exifWhatsApp, readChunks, plan, sha256b64, score };
 })();

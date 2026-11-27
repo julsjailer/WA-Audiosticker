@@ -5,8 +5,12 @@ import android.app.AlertDialog
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
+import android.util.Base64
 import android.view.ViewGroup
 import android.webkit.ConsoleMessage
+import android.webkit.CookieManager
 import android.webkit.RenderProcessGoneDetail
 import android.webkit.ValueCallback
 import android.webkit.WebChromeClient
@@ -40,6 +44,21 @@ class WhatsAppWebActivity : ComponentActivity() {
 
   private var webView: WebView? = null
   private var pendingFiles: ValueCallback<Array<Uri>>? = null
+  private var deliveryScript: String? = null
+  private val handler = Handler(Looper.getMainLooper())
+
+  // Pregunta a la página si ya abrió el sticker; hasta entonces la copia se conserva.
+  private val checkDelivery =
+    object : Runnable {
+      override fun run() {
+        val web = webView ?: return
+        if (deliveryScript == null) return
+        web.evaluateJavascript("!!(window.__waasMovil && window.__waasMovil.delivered)") {
+          if (it == "true") discardSticker()
+        }
+        handler.postDelayed(this, DELIVERY_CHECK_MS)
+      }
+    }
 
   private val pickFile =
     registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
@@ -71,6 +90,23 @@ class WhatsAppWebActivity : ComponentActivity() {
     }
   }
 
+  private fun loadPendingSticker() {
+    val type = SoundHandoff.videoType(intent.getStringExtra(EXTRA_STICKER_TYPE).orEmpty()) ?: return
+    val file = SoundHandoff.file(this)
+    if (!file.isFile || file.length() > SoundHandoff.MAX_BYTES) return
+    val base64 = Base64.encodeToString(file.readBytes(), Base64.NO_WRAP)
+    val shape = SoundHandoff.shape(intent.getStringExtra(EXTRA_STICKER_SHAPE))
+    deliveryScript = SoundHandoff.deliveryScript(base64, type, shape)
+    toast(R.string.web_sticker_waiting)
+    handler.postDelayed(checkDelivery, DELIVERY_CHECK_MS)
+  }
+
+  private fun discardSticker() {
+    deliveryScript = null
+    handler.removeCallbacks(checkDelivery)
+    SoundHandoff.file(this).delete()
+  }
+
   @SuppressLint("SetJavaScriptEnabled")
   private fun showWhatsAppWeb() {
     val script =
@@ -82,6 +118,8 @@ class WhatsAppWebActivity : ComponentActivity() {
 
     val web = WebView(this)
     webView = web
+    CookieManager.getInstance().setAcceptCookie(true)
+    loadPendingSticker()
     web.settings.apply {
       javaScriptEnabled = true
       domStorageEnabled = true
@@ -111,7 +149,10 @@ class WhatsAppWebActivity : ComponentActivity() {
 
         override fun onPageFinished(view: WebView?, url: String?) {
           super.onPageFinished(view, url)
-          if (WhatsAppWeb.isWhatsAppWeb(url)) view?.evaluateJavascript(script, null)
+          if (!WhatsAppWeb.isWhatsAppWeb(url)) return
+          view?.evaluateJavascript(script, null)
+          // Se repite en cada carga: al vincular la cuenta la página puede recargarse.
+          deliveryScript?.let { view?.evaluateJavascript(it, null) }
         }
 
         override fun onRenderProcessGone(view: WebView?, detail: RenderProcessGoneDetail?): Boolean {
@@ -232,7 +273,20 @@ class WhatsAppWebActivity : ComponentActivity() {
     Toast.makeText(this, message, Toast.LENGTH_LONG).show()
   }
 
+  // La sesión se guarda sola; esto obliga a escribirla antes de que el sistema pueda cerrar la app.
+  override fun onPause() {
+    CookieManager.getInstance().flush()
+    super.onPause()
+  }
+
+  override fun onStop() {
+    CookieManager.getInstance().flush()
+    super.onStop()
+  }
+
   override fun onDestroy() {
+    handler.removeCallbacks(checkDelivery)
+    if (isFinishing) discardSticker()
     pendingFiles?.onReceiveValue(null)
     pendingFiles = null
     webView?.let { web ->
@@ -243,7 +297,11 @@ class WhatsAppWebActivity : ComponentActivity() {
     super.onDestroy()
   }
 
-  private companion object {
-    const val KEY_ACCEPTED = "risk_accepted"
+  companion object {
+    /** Tipo del video que dejó el editor en [SoundHandoff]. */
+    const val EXTRA_STICKER_TYPE = "sticker_type"
+    const val EXTRA_STICKER_SHAPE = "sticker_shape"
+    private const val KEY_ACCEPTED = "risk_accepted"
+    private const val DELIVERY_CHECK_MS = 3000L
   }
 }

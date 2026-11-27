@@ -939,7 +939,7 @@
         </div>
         <div class="brand-text">
           <h1>AudioStickers</h1>
-          <p>Videos con sonido y stickers</p>
+          <p>Una app de Jul's Jailer</p>
         </div>
       </div>
 
@@ -1074,6 +1074,7 @@
         </div>
 
         <div id="paneFile" class="audio-mode-pane">
+          <button id="soundLibraryBtn" class="btn btn-primary" type="button" style="width:100%; margin-bottom:10px;" hidden>🔎 Buscar audios en MyInstants</button>
           <div id="uploadAudioZone" class="upload-zone" role="button" tabindex="0">
             <div style="font-size:1.5rem;">🎵</div>
             <strong>Toca para subir audio (MP3, OGG, WAV, M4A)</strong>
@@ -1195,6 +1196,7 @@
           </div>
           <button id="shareAudioDirectBtn" class="btn btn-secondary btn-sm" type="button">🔊 Enviar archivo de audio (.wav) directo a WhatsApp</button>
 
+          <button id="sendWithSoundBtn" class="btn btn-primary" type="button" hidden>🔊 Enviar como sticker con sonido</button>
           <button id="openSoundStickerWebBtn" class="btn btn-secondary btn-sm" type="button" hidden>🎙️ Estudio: stickers con sonido en WhatsApp Web (experimental)</button>
 
           <div class="beta-steps-box">
@@ -1258,7 +1260,7 @@
         <div class="step-num">4</div>
         <div><strong>Paquetes:</strong> Un video guardado en la galería queda como sticker <strong>animado</strong> (máx. 10 s, sin sonido). Haz paquetes solo animados o solo fijos.</div>
       </div>
-      <p style="font-size:0.72rem; color:var(--text-secondary); margin:12px 0 0;">Los stickers animados y el Estudio con sonido usan código de WA-audio-stickers de Shirtep (github.com/Shirtep/WA-audio-stickers), licencia PolyForm Noncommercial 1.0.0.</p>
+      <p style="font-size:0.72rem; color:var(--text-secondary); margin:12px 0 0;">AudioStickers © 2026 Jul's Jailer. El envío con sonido y el Estudio usan código de WA-audio-stickers de Shirtep (github.com/Shirtep/WA-audio-stickers), licencia PolyForm Noncommercial 1.0.0.</p>
     </div>
   </div>
 
@@ -1294,8 +1296,8 @@
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
-  <!-- Codificador de WA-audio-stickers (Shirtep, PolyForm Noncommercial). La app lo inserta aquí. -->
-  <script src="waas/convert.js"></script>
+  <!-- Creador de stickers animados propio. La app lo inserta aquí. -->
+  <script src="animacion.js"></script>
   <script>
     (() => {
       'use strict';
@@ -2527,8 +2529,16 @@
         recorder.ondataavailable = (e) => { if (e.data && e.data.size > 0) chunks.push(e.data); };
 
         if (state.visualMode === 'video' && state.loadedVideoEl) {
-          state.loadedVideoEl.currentTime = 0;
-          state.loadedVideoEl.play().catch(() => {});
+          const video = state.loadedVideoEl;
+          const from = state.audioSourceFile === state.loadedVideoFile ? state.trimStart : 0;
+          if (Math.abs(video.currentTime - from) > 0.01) {
+            await new Promise((done) => {
+              video.addEventListener('seeked', done, { once: true });
+              setTimeout(done, 3000);
+              video.currentTime = from;
+            });
+          }
+          video.play().catch(() => {});
         }
 
         videoExportProgressWrap.classList.add('show');
@@ -2664,6 +2674,49 @@
         openSoundStickerWebBtn.addEventListener('click', () => window.AndroidBridge.openSoundStickerWeb());
       }
       shareStickerVideoBtn.addEventListener('click', () => exportUnifiedSticker(true));
+
+      // Pasa el sticker ya armado a la pantalla de WhatsApp Web, donde solo queda elegir el destino.
+      const sendWithSoundBtn = $('sendWithSoundBtn');
+      if (window.AndroidBridge && typeof window.AndroidBridge.sendWithSound === 'function') {
+        sendWithSoundBtn.hidden = false;
+        sendWithSoundBtn.addEventListener('click', async () => {
+          sendWithSoundBtn.disabled = true;
+          try {
+            const res = await generateUnifiedStickerBlob();
+            if (res) window.AndroidBridge.sendWithSound(await blobToBase64(res.blob), res.mime, state.visualShape);
+          } catch (err) {
+            console.error(err);
+            showToast('No se pudo preparar el sticker.');
+          } finally {
+            sendWithSoundBtn.disabled = false;
+          }
+        });
+      }
+
+      const soundLibraryBtn = $('soundLibraryBtn');
+      if (window.AndroidBridge && typeof window.AndroidBridge.openSoundLibrary === 'function') {
+        soundLibraryBtn.hidden = false;
+        soundLibraryBtn.addEventListener('click', () => window.AndroidBridge.openSoundLibrary());
+      }
+
+      // Android entrega aquí el audio descargado: se pone en el sticker y se reproduce la vista previa.
+      window.__onLibrarySound = async (fileName, base64) => {
+        try {
+          const bytes = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
+          const name = fileName.replace(/\.[a-z0-9]+$/i, '').replace(/[_-]+/g, ' ').trim() || 'Audio';
+          const before = state.audioBuffer;
+          await loadAudioBlob(new Blob([bytes], { type: 'audio/mpeg' }), name);
+          if (state.audioBuffer === before) return;
+          switchTab('create');
+          switchAudioMode('file');
+          if (!stickerNameInput.value.trim()) stickerNameInput.value = name.slice(0, 44);
+          soundStickerTrigger.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          startSimulatorLoop();
+        } catch (err) {
+          console.error(err);
+          showToast('No se pudo usar ese audio. Prueba con otro.');
+        }
+      };
       shareAudioDirectBtn.addEventListener('click', async () => {
         if (!state.audioBuffer) {
           showToast('Graba o selecciona un audio antes de enviarlo a WhatsApp.');
@@ -2855,34 +2908,26 @@
       // Recorre el video cuadro por cuadro con el encuadre elegido y crea el WebP animado.
       // Si el audio salió de este video se usa el mismo tramo; si no, el video desde el inicio.
       async function buildAnimatedVisual(onProgress) {
-        const { loadVideo, seek } = window.WAAS._internals;
         const file = state.loadedVideoFile;
-        const video = await loadVideo(file);
+        const clip = await window.Animacion.openVideo(file);
         try {
-          const offset = video._waasOffset || 0;
-          const total = video.duration - offset;
-          if (!Number.isFinite(total) || total <= 0) throw new Error('No se pudo saber cuánto dura el video.');
           const sameSource = state.audioSourceFile === file;
-          const start = sameSource ? Math.min(state.trimStart, Math.max(0, total - MIN_CLIP_SEC)) : 0;
-          const wanted = sameSource ? state.trimEnd - state.trimStart : total;
-          const duration = Math.min(MAX_CLIP_SEC, wanted, total - start);
+          const start = sameSource ? Math.min(state.trimStart, Math.max(0, clip.length - MIN_CLIP_SEC)) : 0;
+          const wanted = sameSource ? state.trimEnd - state.trimStart : clip.length;
           const frame = document.createElement('canvas');
           frame.width = 512;
           frame.height = 512;
-          const result = await window.WAAS.encodePackAnimation({
-            duration,
+          return await window.Animacion.createSticker({
+            duration: Math.min(MAX_CLIP_SEC, wanted, clip.length - start),
             onProgress,
-            render: async (t) => {
-              await seek(video, offset + Math.min(start + t, Math.max(0, total - 0.02)));
-              renderVisualToCanvas(frame, video);
+            draw: async (t) => {
+              await clip.seek(start + t);
+              renderVisualToCanvas(frame, clip.video);
               return frame;
             },
           });
-          return new Blob([result.bytes], { type: 'image/webp' });
         } finally {
-          URL.revokeObjectURL(video._waasUrl);
-          video.removeAttribute('src');
-          video.load();
+          clip.close();
         }
       }
 
