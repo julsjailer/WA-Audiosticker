@@ -1,0 +1,18 @@
+AudioStickers (WA-AudioSticker)
+Copyright (c) 2026 Jul's Jailer. Todos los derechos reservados.
+
+El código, el diseño y los textos propios de esta aplicación pertenecen a Jul's Jailer.
+No se permite copiarlos, modificarlos, redistribuirlos ni venderlos sin su permiso escrito,
+salvo lo que la ley o las condiciones de GitHub permitan para un repositorio público.
+
+Partes que NO cubre esta licencia
+---------------------------------
+1. app/src/main/assets/waas/ (excepto movil.js): obra basada en WA-audio-stickers,
+   Copyright Shirtep (https://github.com/Shirtep/WA-audio-stickers), bajo la licencia
+   PolyForm Noncommercial 1.0.0 incluida en esa carpeta. Mientras la aplicación incluya
+   esta parte, solo puede distribuirse sin fines comerciales.
+2. Las bibliotecas de terceros que la aplicación usa, cada una con su propia licencia.
+3. Los audios, imágenes y videos que cada persona use para crear sus stickers.
+
+El software se entrega "tal cual", sin garantías. AudioStickers no está afiliada a WhatsApp,
+Meta ni MyInstants.

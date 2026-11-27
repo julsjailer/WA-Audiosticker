@@ -4,8 +4,7 @@ on:
   push:
     branches:
       - main
-      - ci-apk-release
-      - release-v0.1.0
+      - experimento/whatsapp-web
     tags:
       - "v*"
   pull_request:
@@ -16,10 +15,20 @@ on:
 permissions:
   contents: read
 
+env:
+  VERSION_NAME: ${{ github.ref_type == 'tag' && github.ref_name || format('0.2.0-beta.{0}', github.run_number) }}
+  VERSION_CODE: ${{ github.run_number }}
+
 jobs:
   build-test:
-    name: Test and build debug APK
+    name: Test and build APK
     runs-on: ubuntu-latest
+    outputs:
+      signed: ${{ env.HAS_SIGNING_KEY }}
+      version: ${{ env.VERSION_NAME }}
+    env:
+      # Los pull requests nunca usan la clave de firma.
+      HAS_SIGNING_KEY: ${{ secrets.FIRMA != '' && github.event_name != 'pull_request' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -38,9 +47,37 @@ jobs:
         run: gradle testDebugUnitTest
       - name: Build debug APK
         run: gradle assembleDebug
+      - name: Prepare signing key (optional)
+        if: env.HAS_SIGNING_KEY == 'true'
         env:
-          VERSION_CODE: ${{ github.run_number }}
-          VERSION_NAME: ${{ github.ref_type == 'tag' && github.ref_name || format('0.1.0-ci.{0}', github.run_number) }}
+          # Un solo secreto con el formato contraseña:almacén_en_base64
+          FIRMA: ${{ secrets.FIRMA }}
+        run: |
+          value="$(printf '%s' "$FIRMA" | tr -d '[:space:]')"
+          password="${value%%:*}"
+          echo "::add-mask::$password"
+          printf '%s' "${value#*:}" | base64 --decode > "$RUNNER_TEMP/release.jks" || true
+          if ! STORE_CHECK="$password" keytool -list -keystore "$RUNNER_TEMP/release.jks" -storepass:env STORE_CHECK -alias audiostickers > /dev/null 2>&1; then
+            echo "::error::El secreto FIRMA no es válido. Copia la línea completa del archivo FIRMA.txt."
+            exit 1
+          fi
+          {
+            echo "KEYSTORE_PATH=$RUNNER_TEMP/release.jks"
+            echo "STORE_PASSWORD=$password"
+            echo "KEY_PASSWORD=$password"
+            echo "KEY_ALIAS=audiostickers"
+          } >> "$GITHUB_ENV"
+      - name: Build release APK (not debuggable)
+        run: gradle assembleRelease
+      - name: Name the release APK
+        run: cp app/build/outputs/apk/release/app-release.apk "WA-AudioSticker-$VERSION_NAME.apk"
+      - name: Upload release APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: WA-AudioSticker-release-${{ github.run_number }}
+          path: WA-AudioSticker-${{ env.VERSION_NAME }}.apk
+          if-no-files-found: error
+          retention-days: 14
       - name: Upload debug APK artifact
         uses: actions/upload-artifact@v4
         with:
@@ -50,45 +87,31 @@ jobs:
           retention-days: 14
 
   release:
-    name: Build and publish tagged APK
-    if: startsWith(github.ref, 'refs/tags/v') || github.ref == 'refs/heads/release-v0.1.0'
+    name: Publish APK in GitHub Releases
+    if: >-
+      github.event_name != 'pull_request' &&
+      (github.ref_type == 'tag' || github.ref == 'refs/heads/main' || github.ref == 'refs/heads/experimento/whatsapp-web')
     needs: build-test
     runs-on: ubuntu-latest
     permissions:
       contents: write
-    env:
-      HAS_SIGNING_KEY: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Set up Java 17
-        uses: actions/setup-java@v4
+      - name: Download release APK
+        uses: actions/download-artifact@v4
         with:
-          distribution: temurin
-          java-version: "17"
-      - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v4
-        with:
-          gradle-version: "9.3.1"
-      - name: Decode signing key (optional)
-        if: env.HAS_SIGNING_KEY == 'true'
-        run: |
-          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > release-keystore.jks
-        shell: bash
-      - name: Build release APK
-        run: gradle assembleRelease
-        env:
-          VERSION_CODE: ${{ github.run_number }}
-          VERSION_NAME: ${{ github.ref == 'refs/heads/release-v0.1.0' && 'v0.1.0' || github.ref_name }}
-          KEYSTORE_PATH: ${{ env.HAS_SIGNING_KEY == 'true' && 'release-keystore.jks' || '' }}
-          STORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
-          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
-          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          name: WA-AudioSticker-release-${{ github.run_number }}
       - name: Publish GitHub Release with APK
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ github.ref_type == 'tag' && github.ref_name || 'v0.1.0' }}
-          target_commitish: main
-          name: WA-AudioSticker ${{ github.ref_type == 'tag' && github.ref_name || 'v0.1.0' }}
+          tag_name: ${{ github.ref_type == 'tag' && github.ref_name || format('v{0}', needs.build-test.outputs.version) }}
+          target_commitish: ${{ github.sha }}
+          name: WA-AudioSticker ${{ needs.build-test.outputs.version }}
+          make_latest: "true"
+          body: |
+            Descarga el archivo `.apk` de abajo (en **Assets**) y ábrelo en tu teléfono.
+
+            ${{ needs.build-test.outputs.signed == 'true' && 'Firmado con la clave fija del proyecto: se instala encima de la versión anterior si esa también usaba esta clave.' || '⚠️ Firmado con una clave temporal: desinstala la versión anterior antes de instalar (se pierde la galería guardada y hay que volver a vincular WhatsApp Web).' }}
+
+            AudioStickers © 2026 Jul's Jailer. Incluye código de [WA-audio-stickers](https://github.com/Shirtep/WA-audio-stickers) de Shirtep (PolyForm Noncommercial 1.0.0): solo uso no comercial.
           generate_release_notes: true
-          files: app/build/outputs/apk/release/app-release.apk
+          files: WA-AudioSticker-${{ needs.build-test.outputs.version }}.apk

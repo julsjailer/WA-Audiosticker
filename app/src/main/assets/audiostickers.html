@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>AudioStickers — Sound Stickers para WhatsApp Beta</title>
+  <title>AudioStickers — Sound Stickers para WhatsApp</title>
   <style>
     :root {
       --bg-app: #0b141a;
@@ -856,17 +856,16 @@
       background: rgba(0, 0, 0, 0.68);
       backdrop-filter: blur(4px);
       display: none;
-      align-items: flex-end;
+      align-items: center;
       justify-content: center;
       padding: 16px;
     }
-    @media (min-width: 640px) { .modal-backdrop { align-items: center; } }
     .modal-backdrop.open { display: flex; }
 
     .modal-sheet {
       width: 100%;
       max-width: 480px;
-      max-height: 88vh;
+      max-height: 100%;
       overflow-y: auto;
       background: var(--bg-surface);
       border: 1px solid var(--border);
@@ -938,13 +937,13 @@
           </svg>
         </div>
         <div class="brand-text">
-          <h1>AudioStickers <span class="brand-badge">Beta 2.26.47.10</span></h1>
-          <p>Stickers con audio incrustado adentro en 1 solo archivo</p>
+          <h1>AudioStickers</h1>
+          <p>Una app de Jul's Jailer</p>
         </div>
       </div>
 
       <div class="header-actions">
-        <button id="guideHeaderBtn" class="icon-btn" type="button" aria-label="Cómo usar en WhatsApp Beta">❓</button>
+        <button id="guideHeaderBtn" class="icon-btn" type="button" aria-label="Cómo usar en WhatsApp">❓</button>
         <button id="themeToggleBtn" class="icon-btn" type="button" aria-label="Cambiar tema"><span id="themeIcon">☀️</span></button>
       </div>
     </div>
@@ -986,8 +985,23 @@
           <div class="crop-controls">
             <div id="zoomRow" class="control-row">
               <span>🔍 Zoom</span>
-              <input id="visualZoomSlider" type="range" min="1" max="3" step="0.05" value="1" />
+              <input id="visualZoomSlider" type="range" min="1" max="4" step="0.05" value="1" />
               <span id="zoomLabel">1.0x</span>
+            </div>
+            <div id="panXRow" class="control-row">
+              <span>↔ Horizontal</span>
+              <input id="panXSlider" type="range" min="-100" max="100" step="1" value="0" aria-label="Posición horizontal" />
+              <span id="panXLabel">0%</span>
+            </div>
+            <div id="panYRow" class="control-row">
+              <span>↕ Vertical</span>
+              <input id="panYSlider" type="range" min="-100" max="100" step="1" value="0" aria-label="Posición vertical" />
+              <span id="panYLabel">0%</span>
+            </div>
+            <div id="fitRow" class="chip-row">
+              <button type="button" class="mini-chip active" data-fit="cover">Llenar cuadro</button>
+              <button type="button" class="mini-chip" data-fit="contain">Ver completo</button>
+              <button type="button" id="centerVisualBtn" class="mini-chip">Centrar</button>
             </div>
 
             <div class="chip-row">
@@ -1059,6 +1073,7 @@
         </div>
 
         <div id="paneFile" class="audio-mode-pane">
+          <button id="soundLibraryBtn" class="btn btn-primary" type="button" style="width:100%; margin-bottom:10px;" hidden>🔎 Buscar audios en MyInstants</button>
           <div id="uploadAudioZone" class="upload-zone" role="button" tabindex="0">
             <div style="font-size:1.5rem;">🎵</div>
             <strong>Toca para subir audio (MP3, OGG, WAV, M4A)</strong>
@@ -1126,7 +1141,7 @@
           <div class="wa-chat-bar">
             <div class="wa-avatar">💬</div>
             <div>
-              <div>Chat WhatsApp Beta</div>
+              <div>Vista previa</div>
               <div style="font-size:0.72rem; color:var(--text-secondary); font-weight:500;">Sound Sticker unificado (visual + audio)</div>
             </div>
           </div>
@@ -1165,10 +1180,10 @@
         <!-- EXPORTACIÓN EN 1 SOLO ARCHIVO CON AUDIO INCRUSTADO -->
         <div class="unified-export-box">
           <h4>
-            <span>4. Sticker único con audio adentro</span>
+            <span>4. Video con sonido</span>
             <span class="brand-badge">1 solo archivo</span>
           </h4>
-          <p>Fusiona la imagen/video 512×512 y el audio recortado en <strong>un único archivo listo para WhatsApp Beta 2.26.47.10</strong> (nada separado).</p>
+          <p>Une la imagen o video 512×512 y el audio recortado en <strong>un solo video</strong>, la base para crear el sticker con sonido en WhatsApp.</p>
 
           <div id="videoExportProgressWrap" class="progress-bar-wrap">
             <div id="videoExportProgressFill" class="progress-bar-fill"></div>
@@ -1176,15 +1191,18 @@
 
           <div class="export-btn-row">
             <button id="saveStickerVideoBtn" class="btn btn-primary" type="button">💾 Guardar en Galería</button>
-            <button id="shareStickerVideoBtn" class="btn btn-secondary" type="button">📲 Enviar directo a WhatsApp</button>
+            <button id="shareStickerVideoBtn" class="btn btn-secondary" type="button">📲 Enviar como video a WhatsApp</button>
           </div>
           <button id="shareAudioDirectBtn" class="btn btn-secondary btn-sm" type="button">🔊 Enviar archivo de audio (.wav) directo a WhatsApp</button>
 
+          <button id="sendWithSoundBtn" class="btn btn-primary" type="button" hidden>🔊 Enviar como sticker con sonido</button>
+          <button id="openSoundStickerWebBtn" class="btn btn-secondary btn-sm" type="button" hidden>🎙️ Estudio: stickers con sonido en WhatsApp Web (experimental)</button>
+
           <div class="beta-steps-box">
-            <strong>Importar en WhatsApp Beta 2.26.47.10:</strong><br/>
-            1. Toca <strong>Guardar en Galería</strong> (crea el clip 512×512 con el audio incrustado adentro).<br/>
-            2. En WhatsApp abre un chat → pestaña <strong>Stickers → Crear</strong>.<br/>
-            3. Elige el archivo guardado: WhatsApp lo convierte en Sound Sticker oficial conservando su audio adentro.
+            <strong>Crear el sticker con sonido (solo si tu WhatsApp ya tiene la función):</strong><br/>
+            1. Toca <strong>Guardar en Galería</strong>.<br/>
+            2. En WhatsApp abre un chat → <strong>Stickers → Crear sticker</strong>.<br/>
+            3. Elige el video guardado y, en el botón de audio, conserva el audio del video.
           </div>
         </div>
       </div>
@@ -1209,7 +1227,7 @@
             <button id="downloadWastickersBtn" class="btn btn-secondary btn-sm" type="button">📦 Descargar .wastickers</button>
           </div>
           <div style="font-size:0.76rem; color:var(--text-secondary);">
-            Selecciona al menos <strong>3 stickers</strong> de la lista para enviar el paquete completo directo a WhatsApp o exportarlo como <code>.wastickers</code>.
+            Selecciona al menos <strong>3 stickers</strong>, todos <strong>animados</strong> o todos <strong>fijos</strong> (WhatsApp no permite mezclarlos). Los paquetes <strong>no llevan sonido</strong>.
           </div>
         </div>
 
@@ -1222,21 +1240,26 @@
   <div id="guideModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="guideTitle">
     <div class="modal-sheet">
       <div class="modal-head">
-        <h3 id="guideTitle">📖 Sound Stickers (WhatsApp Beta 2.26.47.10)</h3>
+        <h3 id="guideTitle">📖 Sound Stickers en WhatsApp</h3>
         <button id="closeGuideBtn" class="icon-btn" type="button">✕</button>
       </div>
       <div class="guide-step">
         <div class="step-num">1</div>
-        <div><strong>Un solo contenedor con audio adentro:</strong> Esta app combina tu imagen 512×512 (o video) + audio en un único archivo multimedia para que no queden separados.</div>
+        <div><strong>Un solo video:</strong> Esta app une tu imagen o video 512×512 con el audio recortado.</div>
       </div>
       <div class="guide-step">
         <div class="step-num">2</div>
-        <div><strong>Simulador fiel:</strong> En el chat el sticker aparece con `🔇`; al tocarlo rebota y reproduce su audio integrado hasta 3 veces antes de silenciarse.</div>
+        <div><strong>Simulador:</strong> Muestra una vista aproximada; en WhatsApp puede verse o sonar distinto.</div>
       </div>
       <div class="guide-step">
         <div class="step-num">3</div>
-        <div><strong>Cómo meterlo en WhatsApp Beta 2.26.47.10:</strong> Pulsa <em>Guardar en Galería</em>, luego entra a WhatsApp → <strong>Stickers → Crear</strong> y selecciona el archivo creado. WhatsApp lo convierte al instante en Sound Sticker con el sonido incrustado.</div>
+        <div><strong>En WhatsApp:</strong> Pulsa <em>Guardar en Galería</em>, entra a <strong>Stickers → Crear sticker</strong> y elige el video. La función llega poco a poco, primero a usuarios beta. Si no aparece el botón de audio, tu cuenta todavía no la tiene.</div>
       </div>
+      <div class="guide-step">
+        <div class="step-num">4</div>
+        <div><strong>Paquetes:</strong> Un video guardado en la galería queda como sticker <strong>animado</strong> (máx. 10 s, sin sonido). Haz paquetes solo animados o solo fijos.</div>
+      </div>
+      <p style="font-size:0.72rem; color:var(--text-secondary); margin:12px 0 0;">AudioStickers © 2026 Jul's Jailer. El envío con sonido y el Estudio usan código de WA-audio-stickers de Shirtep (github.com/Shirtep/WA-audio-stickers), licencia PolyForm Noncommercial 1.0.0.</p>
     </div>
   </div>
 
@@ -1272,6 +1295,8 @@
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
+  <!-- Creador de stickers animados propio. La app lo inserta aquí. -->
+  <script src="animacion.js"></script>
   <script>
     (() => {
       'use strict';
@@ -1301,8 +1326,14 @@
         visualEmoji: '😂',
         visualShape: 'rounded',
         visualZoom: 1,
+        visualFit: 'cover',
         panX: 0,
         panY: 0,
+        maxPanX: 0,
+        maxPanY: 0,
+        audioSourceFile: null,
+        keepVisual: null,
+        isSaving: false,
         isDraggingCrop: false,
         dragLastX: 0,
         dragLastY: 0,
@@ -1516,6 +1547,7 @@
         useEmojiVisualBtn.classList.toggle('active', mode === 'emoji');
         emojiVisualPicker.style.display = mode === 'emoji' ? 'flex' : 'none';
         zoomRow.style.display = mode === 'emoji' ? 'none' : 'flex';
+        ['panXRow', 'panYRow', 'fitRow'].forEach((id) => { $(id).style.display = mode === 'emoji' ? 'none' : 'flex'; });
         videoAudioBox.classList.toggle('show', mode === 'video' && !!state.loadedVideoFile);
 
         if (mode === 'emoji') visualTypeBadge.textContent = '512×512 • Emoji';
@@ -1541,18 +1573,31 @@
 
       function drawCoverMedia(ctx, media, mediaW, mediaH, size) {
         if (!mediaW || !mediaH) return;
-        const baseScale = Math.max(size / mediaW, size / mediaH);
-        const scale = baseScale * state.visualZoom;
+        const fit = state.visualFit === 'contain' ? Math.min : Math.max;
+        const scale = fit(size / mediaW, size / mediaH) * state.visualZoom;
         const drawW = mediaW * scale;
         const drawH = mediaH * scale;
-        const maxPanX = Math.max(0, (drawW - size) / 2);
-        const maxPanY = Math.max(0, (drawH - size) / 2);
+        // Margen para moverse: lo que sobra al recortar, o el hueco libre al verlo completo.
+        const maxPanX = Math.abs(drawW - size) / 2;
+        const maxPanY = Math.abs(drawH - size) / 2;
+        state.maxPanX = maxPanX;
+        state.maxPanY = maxPanY;
         state.panX = Math.max(-maxPanX, Math.min(maxPanX, state.panX));
         state.panY = Math.max(-maxPanY, Math.min(maxPanY, state.panY));
         ctx.drawImage(media, (size - drawW) / 2 + state.panX, (size - drawH) / 2 + state.panY, drawW, drawH);
       }
 
-      function renderVisualToCanvas(targetCanvas) {
+      function syncPanControls() {
+        [['X', state.panX, state.maxPanX], ['Y', state.panY, state.maxPanY]].forEach(([axis, pan, max]) => {
+          const percent = max >= 0.5 ? Math.round((pan / max) * 100) : 0;
+          $(`pan${axis}Slider`).value = String(percent);
+          $(`pan${axis}Slider`).disabled = max < 0.5;
+          $(`pan${axis}Label`).textContent = `${percent}%`;
+        });
+      }
+
+      function renderVisualToCanvas(targetCanvas, videoOverride) {
+        const video = videoOverride || state.loadedVideoEl;
         const size = 512;
         const ctx = targetCanvas.getContext('2d');
         ctx.clearRect(0, 0, size, size);
@@ -1561,8 +1606,8 @@
 
         if (state.visualMode === 'image' && state.loadedImage) {
           drawCoverMedia(ctx, state.loadedImage, state.loadedImage.naturalWidth, state.loadedImage.naturalHeight, size);
-        } else if (state.visualMode === 'video' && state.loadedVideoEl && state.loadedVideoEl.readyState >= 2) {
-          drawCoverMedia(ctx, state.loadedVideoEl, state.loadedVideoEl.videoWidth, state.loadedVideoEl.videoHeight, size);
+        } else if (state.visualMode === 'video' && video && video.readyState >= 2) {
+          drawCoverMedia(ctx, video, video.videoWidth, video.videoHeight, size);
         } else {
           const grad = ctx.createLinearGradient(0, 0, size, size);
           grad.addColorStop(0, '#1e3c36');
@@ -1575,17 +1620,34 @@
           ctx.fillText(state.visualEmoji, size / 2, size / 2 + 16);
         }
         ctx.restore();
-
-        ctx.save();
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.22)';
-        ctx.lineWidth = 8;
-        ctx.beginPath();
-        if (state.visualShape === 'circle') ctx.arc(size / 2, size / 2, size / 2 - 4, 0, Math.PI * 2);
-        else if (state.visualShape === 'rounded') ctx.roundRect(4, 4, size - 8, size - 8, 60);
-        else ctx.rect(4, 4, size - 8, size - 8);
-        ctx.stroke();
-        ctx.restore();
+        if (targetCanvas === visualCanvas) syncPanControls();
       }
+
+      function refreshVisual() {
+        renderVisualToCanvas(visualCanvas);
+        renderVisualToCanvas(simCanvas);
+      }
+
+      function resetFraming(fit = 'cover') {
+        state.visualFit = fit;
+        state.panX = 0;
+        state.panY = 0;
+        state.visualZoom = 1;
+        visualZoomSlider.value = '1';
+        zoomLabel.textContent = '1.0x';
+        document.querySelectorAll('[data-fit]').forEach((c) => c.classList.toggle('active', c.dataset.fit === fit));
+      }
+
+      ['X', 'Y'].forEach((axis) => {
+        $(`pan${axis}Slider`).addEventListener('input', (e) => {
+          state[`pan${axis}`] = (Number(e.target.value) / 100) * state[`maxPan${axis}`];
+          refreshVisual();
+        });
+      });
+      document.querySelectorAll('[data-fit]').forEach((chip) => {
+        chip.addEventListener('click', () => { resetFraming(chip.dataset.fit); refreshVisual(); });
+      });
+      $('centerVisualBtn').addEventListener('click', () => { resetFraming(state.visualFit); refreshVisual(); });
 
       function canvasToWebpBlob(canvas) {
         return new Promise((resolve) => {
@@ -1647,11 +1709,7 @@
         img.onload = () => {
           URL.revokeObjectURL(url);
           state.loadedImage = img;
-          state.panX = 0;
-          state.panY = 0;
-          state.visualZoom = 1;
-          visualZoomSlider.value = '1';
-          zoomLabel.textContent = '1.0x';
+          resetFraming();
           stopVideoPreviewLoop();
           setVisualMode('image');
           showToast('Imagen lista. Encuadra 1:1 y agrega tu audio.');
@@ -1676,14 +1734,12 @@
         const url = URL.createObjectURL(file);
         vid.src = url;
 
+        // Al buscar un instante el cuadro tarda un momento en estar listo: se vuelve a dibujar entonces.
+        vid.onseeked = () => { if (state.loadedVideoEl === vid && state.visualMode === 'video') refreshVisual(); };
         vid.onloadeddata = () => {
           state.loadedVideoEl = vid;
           state.loadedVideoFile = file;
-          state.panX = 0;
-          state.panY = 0;
-          state.visualZoom = 1;
-          visualZoomSlider.value = '1';
-          zoomLabel.textContent = '1.0x';
+          resetFraming();
           videoInfoLabel.textContent = `🎬 ${file.name.slice(0, 22)} (${vid.duration.toFixed(1)}s)`;
           setVisualMode('video');
           vid.currentTime = 0;
@@ -1697,7 +1753,9 @@
       extractVideoAudioBtn.addEventListener('click', async () => {
         if (!state.loadedVideoFile) return;
         try {
-          await loadAudioBlob(state.loadedVideoFile, `Audio de ${state.loadedVideoFile.name}`);
+          const source = state.loadedVideoFile;
+          await loadAudioBlob(source, `Audio de ${source.name}`);
+          state.audioSourceFile = source;
           switchAudioMode('file');
         } catch (_) {
           showToast('Este video no tiene pista de audio compatible. Graba voz o usa un efecto.');
@@ -1791,7 +1849,7 @@
             cleanupMic();
             const blob = new Blob(state.recordedChunks, { type: rec.mimeType || mime || 'audio/webm' });
             resetRecorderUI();
-            if (blob.size > 200) await loadAudioBlob(blob, 'Grabación de voz');
+            if (blob.size > 200) await loadAudioBlob(blob, 'Grabación de voz').catch(() => showToast('No se pudo procesar la grabación. Intenta de nuevo.'));
             else showToast('Grabación muy corta. Intenta de nuevo.');
           };
 
@@ -1889,7 +1947,7 @@
       audioFileInput.addEventListener('change', (e) => {
         const f = e.target.files && e.target.files[0];
         e.target.value = '';
-        if (f) loadAudioBlob(f, f.name);
+        if (f) loadAudioBlob(f, f.name).catch(() => showToast('No se pudo leer ese audio. Prueba con MP3, M4A, OGG o WAV.'));
       });
 
       function initSfxGrid() {
@@ -2077,6 +2135,7 @@
         stopPreview();
         stopSimulator();
         state.audioBuffer = buffer;
+        state.audioSourceFile = null;
         state.waveformPeaks = extractPeaks(buffer, 90);
         state.trimStart = 0;
         state.trimEnd = Math.min(buffer.duration, MAX_CLIP_SEC);
@@ -2469,8 +2528,16 @@
         recorder.ondataavailable = (e) => { if (e.data && e.data.size > 0) chunks.push(e.data); };
 
         if (state.visualMode === 'video' && state.loadedVideoEl) {
-          state.loadedVideoEl.currentTime = 0;
-          state.loadedVideoEl.play().catch(() => {});
+          const video = state.loadedVideoEl;
+          const from = state.audioSourceFile === state.loadedVideoFile ? state.trimStart : 0;
+          if (Math.abs(video.currentTime - from) > 0.01) {
+            await new Promise((done) => {
+              video.addEventListener('seeked', done, { once: true });
+              setTimeout(done, 3000);
+              video.currentTime = from;
+            });
+          }
+          video.play().catch(() => {});
         }
 
         videoExportProgressWrap.classList.add('show');
@@ -2489,15 +2556,32 @@
             if (elapsed < dur) rafId = requestAnimationFrame(drawFrame);
           };
 
-          recorder.onstop = () => {
-            cancelAnimationFrame(rafId);
+          const finishExport = () => {
+            if (rafId !== null) cancelAnimationFrame(rafId);
             if (state.visualMode === 'video' && state.loadedVideoEl) state.loadedVideoEl.pause();
             combinedStream.getTracks().forEach((t) => t.stop());
             videoExportProgressWrap.classList.remove('show');
             saveStickerVideoBtn.disabled = false;
             shareStickerVideoBtn.disabled = false;
+          };
+
+          recorder.onerror = () => {
+            try { audioSrc.stop(); } catch (_) {}
+            finishExport();
+            showToast('Falló la codificación del sticker. Intenta con otro formato o un clip más corto.');
+            resolve(null);
+          };
+
+          recorder.onstop = () => {
+            finishExport();
+            const blob = new Blob(chunks, { type: mime });
+            if (!blob.size) {
+              showToast('La exportación terminó sin datos. Vuelve a intentarlo.');
+              resolve(null);
+              return;
+            }
             const ext = mime.includes('mp4') ? 'mp4' : 'webm';
-            resolve({ blob: new Blob(chunks, { type: mime }), ext, mime });
+            resolve({ blob, ext, mime });
           };
 
           renderVisualToCanvas(exportCanvas);
@@ -2522,7 +2606,8 @@
           const r = new FileReader();
           r.onloadend = () => {
             const s = String(r.result || '');
-            resolve(s.includes(',') ? s.split(',')[1] : s);
+            // El tipo puede llevar comas (codecs=avc1,mp4a); el base64 va tras la última.
+            resolve(s.slice(s.lastIndexOf(',') + 1));
           };
           r.onerror = reject;
           r.readAsDataURL(blob);
@@ -2578,11 +2663,59 @@
         a.click();
         a.remove();
         setTimeout(() => URL.revokeObjectURL(url), 1500);
-        showToast(`Sticker único guardado (${fileName}) — Impórtalo en WhatsApp Beta > Crear`);
+        showToast(`Sticker único guardado (${fileName}) — Impórtalo en WhatsApp > Stickers > Crear sticker`);
       }
 
       saveStickerVideoBtn.addEventListener('click', () => exportUnifiedSticker(false));
+      const openSoundStickerWebBtn = document.getElementById('openSoundStickerWebBtn');
+      if (window.AndroidBridge && typeof window.AndroidBridge.openSoundStickerWeb === 'function') {
+        openSoundStickerWebBtn.hidden = false;
+        openSoundStickerWebBtn.addEventListener('click', () => window.AndroidBridge.openSoundStickerWeb());
+      }
       shareStickerVideoBtn.addEventListener('click', () => exportUnifiedSticker(true));
+
+      // Pasa el sticker ya armado a la pantalla de WhatsApp Web, donde solo queda elegir el destino.
+      const sendWithSoundBtn = $('sendWithSoundBtn');
+      if (window.AndroidBridge && typeof window.AndroidBridge.sendWithSound === 'function') {
+        sendWithSoundBtn.hidden = false;
+        sendWithSoundBtn.addEventListener('click', async () => {
+          sendWithSoundBtn.disabled = true;
+          try {
+            const res = await generateUnifiedStickerBlob();
+            if (res) window.AndroidBridge.sendWithSound(await blobToBase64(res.blob), res.mime, state.visualShape);
+          } catch (err) {
+            console.error(err);
+            showToast('No se pudo preparar el sticker.');
+          } finally {
+            sendWithSoundBtn.disabled = false;
+          }
+        });
+      }
+
+      const soundLibraryBtn = $('soundLibraryBtn');
+      if (window.AndroidBridge && typeof window.AndroidBridge.openSoundLibrary === 'function') {
+        soundLibraryBtn.hidden = false;
+        soundLibraryBtn.addEventListener('click', () => window.AndroidBridge.openSoundLibrary());
+      }
+
+      // Android entrega aquí el audio descargado: se pone en el sticker y se reproduce la vista previa.
+      window.__onLibrarySound = async (fileName, base64) => {
+        try {
+          const bytes = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
+          const name = fileName.replace(/\.[a-z0-9]+$/i, '').replace(/[_-]+/g, ' ').trim() || 'Audio';
+          const before = state.audioBuffer;
+          await loadAudioBlob(new Blob([bytes], { type: 'audio/mpeg' }), name);
+          if (state.audioBuffer === before) return;
+          switchTab('create');
+          switchAudioMode('file');
+          if (!stickerNameInput.value.trim()) stickerNameInput.value = name.slice(0, 44);
+          soundStickerTrigger.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          startSimulatorLoop();
+        } catch (err) {
+          console.error(err);
+          showToast('No se pudo usar ese audio. Prueba con otro.');
+        }
+      };
       shareAudioDirectBtn.addEventListener('click', async () => {
         if (!state.audioBuffer) {
           showToast('Graba o selecciona un audio antes de enviarlo a WhatsApp.');
@@ -2764,41 +2897,121 @@
         packSelectedCount.textContent = `${count} seleccionados (mín. 3)`;
       }
 
-      saveToGalleryBtn.addEventListener('click', async () => {
-        if (!state.audioBuffer) {
-          showToast('Graba o elige un audio antes de guardar.');
-          return;
-        }
-        renderVisualToCanvas(visualCanvas);
-        const visualBlob = await canvasToWebpBlob(visualCanvas);
-        const audioBlob = encodeTrimmedWav(state.audioBuffer, state.trimStart, state.trimEnd);
-        const wasEditing = Boolean(state.editingStickerId);
-        const targetId = state.editingStickerId || `snd_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
-        const title = stickerNameInput.value.trim() || `SoundSticker #${state.gallery.length + 1}`;
-        const duration = Number((state.trimEnd - state.trimStart).toFixed(1));
-        const now = Date.now();
+      // Un WebP animado lleva la marca de animación en la cabecera VP8X.
+      async function isAnimatedWebp(blob) {
+        const b = new Uint8Array(await blob.slice(0, 21).arrayBuffer());
+        const tag = (o) => String.fromCharCode(b[o], b[o + 1], b[o + 2], b[o + 3]);
+        return b.length === 21 && tag(0) === 'RIFF' && tag(8) === 'WEBP' && tag(12) === 'VP8X' && (b[20] & 0x02) !== 0;
+      }
 
-        if (isAndroidRoomAvailable()) {
-          const [visualB64, audioB64] = await Promise.all([blobToBase64(visualBlob), blobToBase64(audioBlob)]);
-          roomAudioCache.set(targetId, audioBlob);
-          window.AndroidBridge.saveRoomSticker(targetId, title, duration, now, visualB64, audioB64);
-        } else {
-          await putGalleryItem({
-            id: targetId,
-            title,
-            duration,
-            createdAt: now,
-            visualBlob,
-            audioBlob,
+      // Recorre el video cuadro por cuadro con el encuadre elegido y crea el WebP animado.
+      // Si el audio salió de este video se usa el mismo tramo; si no, el video desde el inicio.
+      async function buildAnimatedVisual(onProgress) {
+        const file = state.loadedVideoFile;
+        const clip = await window.Animacion.openVideo(file);
+        try {
+          const sameSource = state.audioSourceFile === file;
+          const start = sameSource ? Math.min(state.trimStart, Math.max(0, clip.length - MIN_CLIP_SEC)) : 0;
+          const wanted = sameSource ? state.trimEnd - state.trimStart : clip.length;
+          const frame = document.createElement('canvas');
+          frame.width = 512;
+          frame.height = 512;
+          return await window.Animacion.createSticker({
+            duration: Math.min(MAX_CLIP_SEC, wanted, clip.length - start),
+            onProgress,
+            draw: async (t) => {
+              await clip.seek(start + t);
+              renderVisualToCanvas(frame, clip.video);
+              return frame;
+            },
           });
-          await refreshGallery();
+        } finally {
+          clip.close();
         }
+      }
 
-        state.selectedPackIds.add(targetId);
-        updatePackCountBadge();
-        setEditingSticker(null);
-        showToast(wasEditing ? `"${title}" actualizado en la base de datos` : `"${title}" guardado en la base de datos`);
-        if (window.innerWidth < 980) switchTab('gallery');
+      // Firma del encuadre: si no cambió al editar, se conserva el sticker original (y su movimiento).
+      const framingKey = () => JSON.stringify([state.visualZoom, state.panX, state.panY, state.visualFit, state.visualShape]);
+
+      async function buildVisualBlob(onProgress) {
+        if (state.visualMode === 'video' && state.loadedVideoFile) return buildAnimatedVisual(onProgress);
+        const keep = state.keepVisual;
+        if (keep && state.visualMode === 'image' && state.loadedImage === keep.image && framingKey() === keep.framing) return keep.blob;
+        renderVisualToCanvas(visualCanvas);
+        return canvasToWebpBlob(visualCanvas);
+      }
+
+      // Para guardar un video sin haber elegido audio: se usa el suyo, o silencio si no tiene.
+      async function ensureVideoAudio() {
+        if (state.audioBuffer) return true;
+        if (state.visualMode !== 'video' || !state.loadedVideoFile) return false;
+        const file = state.loadedVideoFile;
+        try {
+          await loadAudioBlob(file, `Audio de ${file.name}`);
+          if (state.audioBuffer) state.audioSourceFile = file;
+        } catch (_) { /* el video no tiene sonido */ }
+        if (!state.audioBuffer) {
+          const ctx = await getAudioContext();
+          const seconds = Math.min(MAX_CLIP_SEC, Math.max(MIN_CLIP_SEC, state.loadedVideoEl.duration || MAX_CLIP_SEC));
+          setLoadedAudioBuffer(ctx.createBuffer(1, Math.ceil(seconds * ctx.sampleRate), ctx.sampleRate), 'Sin sonido');
+        }
+        return true;
+      }
+
+      saveToGalleryBtn.addEventListener('click', async () => {
+        if (state.isSaving) return;
+        state.isSaving = true;
+        saveToGalleryBtn.disabled = true;
+        const workspace = document.querySelector('.crop-workspace');
+        try {
+          if (!(await ensureVideoAudio())) {
+            showToast('Graba o elige un audio antes de guardar.');
+            return;
+          }
+          stopSimulator();
+          stopPreview();
+          workspace.style.pointerEvents = 'none';
+          const visualBlob = await buildVisualBlob((text, done) => {
+            saveToGalleryBtn.textContent = `⏳ ${text}… ${Math.round(done * 100)}%`;
+          });
+          const animated = await isAnimatedWebp(visualBlob);
+          const audioBlob = encodeTrimmedWav(state.audioBuffer, state.trimStart, state.trimEnd);
+          const wasEditing = Boolean(state.editingStickerId);
+          const targetId = state.editingStickerId || `snd_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+          const title = stickerNameInput.value.trim() || `SoundSticker #${state.gallery.length + 1}`;
+          const duration = Number((state.trimEnd - state.trimStart).toFixed(1));
+          const now = Date.now();
+
+          if (isAndroidRoomAvailable()) {
+            const [visualB64, audioB64] = await Promise.all([blobToBase64(visualBlob), blobToBase64(audioBlob)]);
+            roomAudioCache.set(targetId, audioBlob);
+            window.AndroidBridge.saveRoomSticker(targetId, title, duration, now, visualB64, audioB64);
+          } else {
+            await putGalleryItem({
+              id: targetId,
+              title,
+              duration,
+              createdAt: now,
+              visualBlob,
+              audioBlob,
+            });
+            await refreshGallery();
+          }
+
+          state.selectedPackIds.add(targetId);
+          updatePackCountBadge();
+          setEditingSticker(null);
+          showToast(`"${title}" ${wasEditing ? 'actualizado' : 'guardado'}${animated ? ' como sticker animado' : ''}`);
+          if (window.innerWidth < 980) switchTab('gallery');
+        } catch (err) {
+          console.error(err);
+          showToast(`No se pudo guardar: ${(err && err.message) || err}`);
+        } finally {
+          state.isSaving = false;
+          saveToGalleryBtn.disabled = false;
+          workspace.style.pointerEvents = '';
+          setEditingSticker(state.editingStickerId, stickerNameInput.value.trim());
+        }
       });
 
       function escapeHtml(s) {
@@ -2848,6 +3061,10 @@
               </div>
             </div>
           `;
+
+          isAnimatedWebp(item.visualBlob).then((animated) => {
+            card.querySelector('.gallery-sub').textContent = `${animated ? '🎞️ Animado' : '🖼️ Fijo'} • ⏱️ ${item.duration.toFixed(1)} s`;
+          });
 
           card.querySelector('.pack-check').addEventListener('change', (e) => {
             if (e.target.checked) state.selectedPackIds.add(item.id);
@@ -3021,6 +3238,11 @@
           return;
         }
         const packName = packNameInput.value.trim() || 'Mis AudioStickers';
+        const animatedCount = (await Promise.all(items.map((i) => isAnimatedWebp(i.visualBlob)))).filter(Boolean).length;
+        if (animatedCount > 0 && animatedCount < items.length) {
+          showToast(`WhatsApp no permite mezclar: elegiste ${animatedCount} animados y ${items.length - animatedCount} fijos. Haz un paquete de cada tipo.`);
+          return;
+        }
 
         if (window.AndroidBridge && typeof window.AndroidBridge.exportStickerPackToWhatsApp === 'function') {
           const trayBlob = await createTrayPngBlobFromBlob(items[0].visualBlob);
@@ -3135,15 +3357,16 @@
         img.onload = async () => {
           URL.revokeObjectURL(url);
           state.loadedImage = img;
-          state.panX = 0;
-          state.panY = 0;
-          state.visualZoom = 1;
+          resetFraming();
+          state.keepVisual = { image: img, blob: item.visualBlob, framing: framingKey() };
           setVisualMode('image');
           stickerNameInput.value = item.title;
           setEditingSticker(item.id, item.title);
           await loadAudioBlob(audioBlob, item.title);
           if (window.innerWidth < 980) switchTab('create');
-          showToast('Cargado en el editor. Ajusta y toca "Actualizar Sticker" o compártelo.');
+          showToast((await isAnimatedWebp(item.visualBlob))
+            ? 'Sticker animado cargado. Si cambias el encuadre quedará fijo: para moverlo de nuevo, elige el video.'
+            : 'Cargado en el editor. Ajusta y toca "Actualizar Sticker" o compártelo.');
         };
         img.src = url;
       }
